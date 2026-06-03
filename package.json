@@ -1,0 +1,41 @@
+{
+  "name": "ethan-cms",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "npx prisma generate && next build",
+    "start": "next start -p ${PORT:-3001}",
+    "lint": "eslint",
+    "db:backup": "node scripts/db-backup.mjs",
+    "postinstall": "npx prisma generate"
+  },
+  "dependencies": {
+    "@prisma/adapter-mariadb": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.22.4",
+    "next": "^16.2.7",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19.2.16",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2.7",
+    "prisma": "^7.8.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.22.4",
+    "typescript": "^5"
+  }
+}

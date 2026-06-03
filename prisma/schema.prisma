@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  ADMIN
+  SALES
+  EDITOR
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  WON
+  LOST
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PRODUCTION
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum DownloadType {
+  PDF
+  ZIP
+  DOC
+  OTHER
+}
+
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  password    String
+  email       String?  @unique
+  displayName String?
+  avatar      String?
+  role        UserRole @default(EDITOR)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blogs     Blog[]
+  inquiries Inquiry[] @relation("AssignedUser")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      Json      // { zh, en, es }
+  slug      String    @unique
+  icon      String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  name        Json          // { zh, en, es }
+  slug        String        @unique
+  sku         String?
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  price       Decimal       @db.Decimal(10, 2)
+  stock       Int           @default(0)
+  moq         Int           @default(1)
+  brand       String?
+  badge       String?
+  summary     Json?         // { zh, en, es }
+  highlights  Json?         // [{ zh, en, es }]
+  details     Json?         // [[key, value], ...]
+  logistics   Json?         // { moq, leadTime, warranty, datasheet }
+  images      Json?         // { main, gallery[] }
+  seoTitle    String?       @db.Text
+  seoDesc     String?       @db.Text
+  seoKeywords String?       @db.Text
+  status      ProductStatus @default(ACTIVE)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  inquiries   Inquiry[]
+  orderItems  OrderItem[]
+  downloads   Download[]
+}
+
+model Inquiry {
+  id          String        @id @default(uuid())
+  name        String
+  email       String
+  country     String?
+  company     String?
+  phone       String?
+  whatsapp    String?
+  productId   String?
+  product     Product?      @relation(fields: [productId], references: [id])
+  quantity    String?
+  message     String?       @db.Text
+  status      InquiryStatus @default(NEW)
+  assignedTo  String?
+  assignee    User?         @relation("AssignedUser", fields: [assignedTo], references: [id])
+  notes       String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Customer {
+  id          String   @id @default(uuid())
+  name        String
+  country     String?
+  email       String?
+  whatsapp    String?
+  phone       String?
+  company     String?
+  totalOrders Int      @default(0)
+  totalAmount Decimal  @default(0) @db.Decimal(12, 2)
+  notes       String?  @db.Text
+  tags        String?  // comma-separated
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  orderNo     String      @unique
+  customerId  String?
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @default(0) @db.Decimal(12, 2)
+  currency    String      @default("USD")
+  trackingNo  String?
+  notes       String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+}
+
+model Media {
+  id        String   @id @default(uuid())
+  url       String
+  filename  String
+  mimeType  String?
+  size      Int      @default(0)
+  folder    String?
+  alt       String?
+  createdAt DateTime @default(now())
+}
+
+model Blog {
+  id        String     @id @default(uuid())
+  title     Json       // { zh, en, es }
+  slug      String     @unique
+  content   Json?      // { zh, en, es } - HTML content
+  excerpt   Json?      // { zh, en, es }
+  coverImage String?
+  authorId  String?
+  author    User?      @relation(fields: [authorId], references: [id])
+  status    BlogStatus @default(DRAFT)
+  seoTitle  String?    @db.Text
+  seoDesc   String?    @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Download {
+  id        String       @id @default(uuid())
+  name      Json         // { zh, en, es }
+  type      DownloadType @default(PDF)
+  fileUrl   String
+  fileSize  String?
+  version   String?
+  productId String?
+  product   Product?     @relation(fields: [productId], references: [id])
+  sortOrder Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Solution {
+  id           String   @id @default(uuid())
+  name         Json     // { zh, en, es }
+  slug         String   @unique
+  description  Json?    // { zh, en, es }
+  icon         String?
+  image        String?
+  productCount String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  author    Json     // { zh, en, es }
+  role      Json?    // { zh, en, es }
+  text      Json     // { zh, en, es }
+  stars     Int      @default(5)
+  image     String?
+  company   String?
+  country   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Translation {
+  id     String @id @default(uuid())
+  key    String
+  locale String // zh, en, es, ru, ar, fr
+  value  String @db.Text
+
+  @@unique([key, locale])
+}
+
+model SiteSetting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value Json?
+}
