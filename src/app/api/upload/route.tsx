@@ -12,11 +12,8 @@ const ALLOWED_TYPES = new Set([
 // 最大文件大小：10MB
 const MAX_SIZE = 10 * 1024 * 1024;
 
-// Next.js Route Handler 请求体大小限制
-export const config = {
-  api: { bodyParser: false },
-  maxDuration: 30,
-};
+// Next.js App Router Route Segment 配置
+export const maxDuration = 30; // 最大执行时间 30秒
 
 export async function POST(request: NextRequest) {
   try {
