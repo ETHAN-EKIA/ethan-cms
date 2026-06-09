@@ -57,16 +57,35 @@ export async function POST(request: NextRequest) {
     const blobPath = `${safeFolder}/${Date.now()}-${safeName}`;
 
     // 上传到 Vercel Blob（适用于 Vercel Serverless 只读文件系统）
-    const blob = await put(blobPath, file, {
-      access: 'public',
-      addRandomSuffix: false,
-    });
+    // 先尝试 public，若 Store 为 private 模式则自动降级
+    let blob;
+    try {
+      blob = await put(blobPath, file, {
+        access: 'public',
+        addRandomSuffix: false,
+      });
+    } catch (publicErr) {
+      const errMsg = publicErr instanceof Error ? publicErr.message : '';
+      if (errMsg.includes('private') || errMsg.includes('access')) {
+        // Store 为 private 模式，改用 private 上传 + 代理路由提供访问
+        blob = await put(blobPath, file, {
+          access: 'private',
+          addRandomSuffix: false,
+        });
+      } else {
+        throw publicErr;
+      }
+    }
 
     // 同步创建媒体记录，使文件出现在「媒体中心」
+    // 若 private store，返回代理 URL；若 public store，返回原始 URL
+    const isPrivate = blob.url.includes('.private.blob.') || blob.url.includes('.private.');
+    const imageUrl = isPrivate ? `/api/blob?path=${blob.pathname}` : blob.url;
+
     try {
       await prisma.media.create({
         data: {
-          url: blob.url,
+          url: imageUrl,
           filename: safeName,
           mimeType: file.type,
           size: file.size,
@@ -78,7 +97,7 @@ export async function POST(request: NextRequest) {
       console.warn('[Upload] 创建媒体记录失败:', dbErr);
     }
 
-    return NextResponse.json({ success: true, url: blob.url });
+    return NextResponse.json({ success: true, url: imageUrl });
   } catch (error) {
     console.error('Upload error:', error);
     const msg = error instanceof Error ? error.message : '未知错误';
