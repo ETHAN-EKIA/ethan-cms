@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface Category { id: string; name: Record<string, string>; slug: string }
 
@@ -12,6 +12,88 @@ interface ProductFormProps {
 }
 
 const langs = [{ key: 'zh', label: '中文' }, { key: 'en', label: 'English' }, { key: 'es', label: 'Español' }]
+
+// 图片上传组件
+function ImageUploader({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('folder', 'products')
+      const res = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '上传失败')
+      onChange(data.url)
+    } catch (e) {
+      alert((e as Error).message || '上传失败')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-sm text-gray-600 mb-1">{label}</label>
+      <div className="flex gap-3 items-start">
+        <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+          {value ? <img src={value.startsWith('/') ? value : `/${value}`} className="w-full h-full object-cover" /> : <span className="text-gray-400 text-2xl">📷</span>}
+        </div>
+        <div className="flex-1 space-y-2">
+          <input value={value} onChange={e => onChange(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="/uploads/products/image.jpg 或点击下方上传" />
+          <div className="flex gap-2">
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+              className="px-3 py-1.5 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700 disabled:opacity-50">
+              {uploading ? '上传中...' : '选择文件上传'}
+            </button>
+            {value && <button type="button" onClick={() => onChange('')} className="px-3 py-1.5 bg-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-300">清除</button>}
+          </div>
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden"
+            onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0]); e.target.value = '' }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Gallery 图片上传组件
+function GalleryUploader({ onAdd }: { onAdd: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (files: FileList) => {
+    setUploading(true)
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('folder', 'products')
+        const res = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || `文件 ${file.name} 上传失败`)
+        onAdd(data.url)
+      }
+    } catch (e) {
+      alert((e as Error).message || '上传失败')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="flex gap-2">
+      <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+        className="px-3 py-1.5 border-2 border-dashed border-gray-300 text-gray-500 text-sm rounded-lg hover:border-cyan-400 hover:text-cyan-600 disabled:opacity-50">
+        {uploading ? '上传中...' : '+ 上传图片到 Gallery'}
+      </button>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
+        onChange={e => { if (e.target.files?.length) handleUpload(e.target.files); e.target.value = '' }} />
+    </div>
+  )
+}
 
 export default function ProductForm({ initialData, categories, onSubmit, submitLabel }: ProductFormProps) {
   const [lang, setLang] = useState('en')
@@ -144,8 +226,30 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       {/* Images */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-semibold text-gray-800 border-b pb-2">图片</h2>
-        <div><label className="block text-sm text-gray-600 mb-1">主图路径</label>
-          <input value={form.images.main} onChange={e => update('images', { ...form.images, main: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="/uploads/products/image.jpg" /></div>
+        <ImageUploader
+          label="主图"
+          value={form.images.main}
+          onChange={(url) => update('images', { ...form.images, main: url })}
+        />
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm text-gray-600">图片库 (Gallery)</label>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
+            {form.images.gallery.map((url, i) => (
+              <div key={i} className="relative group border border-gray-200 rounded-lg overflow-hidden aspect-square bg-gray-50">
+                {url ? <img src={url.startsWith('/') ? url : `/${url}`} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-gray-400">📷</div>}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button type="button" onClick={() => {
+                    const g = [...form.images.gallery]; g.splice(i, 1);
+                    update('images', { ...form.images, gallery: g })
+                  }} className="bg-red-500 text-white text-xs px-2 py-1 rounded">删除</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <GalleryUploader onAdd={(url) => update('images', { ...form.images, gallery: [...form.images.gallery, url] })} />
+        </div>
       </div>
 
       {/* SEO */}

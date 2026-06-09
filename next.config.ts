@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: 'localhost' },
       { protocol: 'https', hostname: '**.vercel.app' },
       { protocol: 'https', hostname: '**.railway.app' },
+      { protocol: 'https', hostname: '**.vercel-storage.com' },
     ],
   },
   // HTTPS强制: Railway/Vercel自动处理HTTPS，此处确保HSTS头
