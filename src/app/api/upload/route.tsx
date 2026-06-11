@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, access } from 'fs/promises';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { verifyToken } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
@@ -20,12 +21,25 @@ const MAX_SIZE = 10 * 1024 * 1024;
 export const maxDuration = 30;
 
 /**
- * 环境自适应文件上传
- *
- * - Vercel 生产环境（BLOB_READ_WRITE_TOKEN 已配置）：使用 Vercel Blob 存储
- * - 本地开发环境（无 BLOB_READ_WRITE_TOKEN）：使用本地 public/uploads/ 目录
+ * 检测 public/ 目录是否可写
+ * Vercel Serverless 文件系统为只读（/tmp 除外）
  */
-async function uploadToBlob(pathname: string, file: File, token: string) {
+async function isPublicWritable(): Promise<boolean> {
+  try {
+    const testPath = join(process.cwd(), 'public', '.write_test');
+    await writeFile(testPath, '');
+    // 清理
+    try { await import('fs/promises').then(m => m.unlink(testPath)); } catch { /* ignore */ }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Vercel Blob 上传
+ */
+async function uploadToBlob(pathname: string, file: File) {
   const { put } = await import('@vercel/blob');
   try {
     return await put(pathname, file, {
@@ -44,19 +58,35 @@ async function uploadToBlob(pathname: string, file: File, token: string) {
   }
 }
 
-async function uploadToLocal(pathname: string, file: File): Promise<{ url: string; pathname: string }> {
+/**
+ * 本地文件系统上传（开发环境：public/uploads/）
+ */
+async function uploadToPublic(pathname: string, file: File): Promise<{ url: string; pathname: string }> {
   const buffer = Buffer.from(await file.arrayBuffer());
   const fullPath = join(process.cwd(), 'public', pathname);
   const dir = join(process.cwd(), 'public', pathname.split('/').slice(0, -1).join('/'));
 
-  // 确保目录存在
   await mkdir(dir, { recursive: true });
-
-  // 写入文件
   await writeFile(fullPath, buffer);
 
-  // 返回本地访问 URL
   const url = `/${pathname.replace(/\\/g, '/')}`;
+  return { url, pathname };
+}
+
+/**
+ * /tmp 临时文件上传（Vercel Serverless 降级方案）
+ * 文件通过 /api/file 代理端点访问
+ */
+async function uploadToTmp(pathname: string, file: File): Promise<{ url: string; pathname: string }> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const fullPath = join(tmpdir(), pathname);
+  const dir = join(tmpdir(), pathname.split('/').slice(0, -1).join('/'));
+
+  await mkdir(dir, { recursive: true });
+  await writeFile(fullPath, buffer);
+
+  // 返回代理 URL
+  const url = `/api/file?path=${encodeURIComponent(pathname)}`;
   return { url, pathname };
 }
 
@@ -109,18 +139,22 @@ export async function POST(request: NextRequest) {
 
     const blobPath = `uploads/${safeFolder}/${Date.now()}-${safeName}`;
 
-    // ── 环境自适应：优先 Vercel Blob，否则本地文件系统 ──
+    // ── 环境自适应存储 ──
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
     let imageUrl: string;
 
     if (blobToken) {
-      // Vercel Blob 模式（生产环境）
-      const blob = await uploadToBlob(blobPath, file, blobToken);
+      // 1. Vercel Blob（生产环境最佳方案）
+      const blob = await uploadToBlob(blobPath, file);
       const isPrivate = blob.url.includes('.private.') || blob.url.includes('.private.blob.');
       imageUrl = isPrivate ? `/api/blob?path=${blob.pathname}` : blob.url;
+    } else if (await isPublicWritable()) {
+      // 2. 本地 public/ 目录（开发环境）
+      const result = await uploadToPublic(blobPath, file);
+      imageUrl = result.url;
     } else {
-      // 本地文件系统模式（开发环境）
-      const result = await uploadToLocal(blobPath, file);
+      // 3. /tmp 临时存储 + 代理端点（Vercel Serverless 无 Blob Token 时的降级）
+      const result = await uploadToTmp(blobPath, file);
       imageUrl = result.url;
     }
 
