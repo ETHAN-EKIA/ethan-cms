@@ -3,6 +3,8 @@ import { prisma, withRetry } from '@/lib/db'
 import { getPublicCorsHeaders } from '@/lib/cors'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+export const revalidate = 0
 
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get('origin')

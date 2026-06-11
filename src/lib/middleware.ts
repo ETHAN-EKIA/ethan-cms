@@ -12,7 +12,11 @@ export function withAuth(
 ) {
   return async (req: NextRequest, context: { params: Promise<{ id?: string }> }) => {
     const authHeader = req.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    const token =
+      (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null) ||
+      // ✅ 安全修复：允许从 httpOnly cookie 获取 token，减少前端持久化 Bearer Token 的必要性
+      req.cookies.get('auth_token')?.value ||
+      null
 
     if (!token) {
       securityLog('AUTH_FAIL', req, { reason: 'no_token' })

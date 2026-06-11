@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { setToken, setUser } from '@/lib/api-client'
+import { setUser } from '@/lib/api-client'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -23,9 +21,9 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '登录失败')
-      setToken(data.token)
       setUser(data.user)
-      router.push('/admin')
+      // 使用硬跳转确保浏览器携带新设置的 auth_token cookie 请求 /admin
+      window.location.href = '/admin'
     } catch (err: unknown) {
       setError((err as Error).message)
     } finally {

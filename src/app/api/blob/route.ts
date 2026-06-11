@@ -12,17 +12,41 @@ export const maxDuration = 30;
  *
  * 用法：GET /api/blob?path=products/1234567890-image.jpg
  */
+
+/**
+ * 获取 CORS 头，允许外部网站加载图片
+ */
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': origin || '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+  };
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(origin),
+  });
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const pathname = searchParams.get('path');
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   if (!pathname) {
-    return NextResponse.json({ error: '缺少 path 参数' }, { status: 400 });
+    return NextResponse.json({ error: '缺少 path 参数' }, { status: 400, headers: corsHeaders });
   }
 
   // 安全检查：防止路径遍历
   if (pathname.includes('..') || pathname.startsWith('/')) {
-    return NextResponse.json({ error: '无效路径' }, { status: 400 });
+    return NextResponse.json({ error: '无效路径' }, { status: 400, headers: corsHeaders });
   }
 
   try {
@@ -30,7 +54,7 @@ export async function GET(request: NextRequest) {
     const blob = await get(pathname, { access: 'private' });
 
     if (!blob) {
-      return NextResponse.json({ error: '文件不存在' }, { status: 404 });
+      return NextResponse.json({ error: '文件不存在' }, { status: 404, headers: corsHeaders });
     }
 
     // 从 blob 元数据推断 Content-Type
@@ -47,6 +71,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(blob.stream, {
       status: 200,
       headers: {
+        ...corsHeaders,
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
         'X-Content-Type-Options': 'nosniff',
@@ -57,9 +82,9 @@ export async function GET(request: NextRequest) {
     const msg = error instanceof Error ? error.message : '未知错误';
 
     if (msg.includes('not found') || msg.includes('does not exist')) {
-      return NextResponse.json({ error: '文件不存在' }, { status: 404 });
+      return NextResponse.json({ error: '文件不存在' }, { status: 404, headers: corsHeaders });
     }
 
-    return NextResponse.json({ error: '文件获取失败' }, { status: 500 });
+    return NextResponse.json({ error: '文件获取失败' }, { status: 500, headers: corsHeaders });
   }
 }

@@ -13,7 +13,19 @@ export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
   try {
     const data = await req.json()
-    return NextResponse.json(await prisma.order.update({ where: { id }, data }))
+
+    const validStatuses = ['PENDING', 'PAID', 'PRODUCTION', 'SHIPPED', 'COMPLETED', 'CANCELLED']
+    if (data.status && !validStatuses.includes(data.status)) {
+      return NextResponse.json({ error: '无效的订单状态' }, { status: 400 })
+    }
+
+    const allowedFields = ['customerId', 'status', 'totalAmount', 'currency', 'trackingNo', 'notes']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    return NextResponse.json(await prisma.order.update({ where: { id }, data: sanitized as never }))
   } catch { return NextResponse.json({ error: '更新订单失败' }, { status: 400 }) }
 }, ['ADMIN', 'SALES'])
 

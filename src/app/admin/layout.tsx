@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { getUser, removeToken, getToken } from '@/lib/api-client'
+import { apiGet, clearLocalState, getUser, logout, setUser } from '@/lib/api-client'
 
 const menuItems = [
   { href: '/admin', label: '仪表盘', icon: '📊' },
@@ -24,7 +24,7 @@ const menuItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [user, setUserState] = useState<{ displayName?: string; username: string; role: string } | null>(null)
+  const [user, setUserState] = useState<{ displayName?: string | null; username: string; role: string } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   // 登录页不需要权限校验
@@ -32,32 +32,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (isLoginPage) return
-
-    const token = getToken()
-
-    // 没 token → 跳登录
-    if (!token) {
-      router.push('/admin/login')
-      return
-    }
-
-    // 有 token → 拿用户信息
-    const u = getUser()
-    if (u) {
-      setUserState(u)
-    } else {
-      // token 存在但 user 数据丢失 → 清除并重新登录
-      removeToken()
-      router.push('/admin/login')
-    }
+    // ✅ 安全修复：不再依赖 localStorage token，改为通过 /api/auth/me 校验 cookie 会话并获取用户信息
+    apiGet<{ username: string; role: string; displayName?: string | null }>('/auth/me')
+      .then((u) => {
+        setUser(u)
+        setUserState(u)
+      })
+      .catch(() => {
+        // apiFetch 内部会处理 401 跳转；此处仅做兜底
+        clearLocalState()
+        router.push('/admin/login')
+      })
   }, [router, isLoginPage, pathname])
 
   // 安全兜底：如果 3 秒后还没有 user，强制跳登录（必须在顶层，不能被条件包裹）
   useEffect(() => {
     if (isLoginPage || user) return
     const timer = setTimeout(() => {
-      if (!getToken() || !getUser()) {
-        removeToken()
+      if (!getUser()) {
+        clearLocalState()
         router.push('/admin/login')
       }
     }, 3000)
@@ -78,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  const handleLogout = () => { removeToken(); router.push('/admin/login') }
+  const handleLogout = async () => { await logout(); router.push('/admin/login') }
 
   return (
     <div className="flex h-screen bg-gray-50">

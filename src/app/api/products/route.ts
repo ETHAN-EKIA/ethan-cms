@@ -61,10 +61,26 @@ export const POST = withAuth(async (req: NextRequest) => {
       if (data[key] !== undefined) sanitized[key] = data[key]
     }
 
+    // 修复: 空字符串 categoryId 转为 null，避免外键约束失败
+    if (sanitized.categoryId === '') sanitized.categoryId = null
+
+    // 修复: 空字符串 sku/brand/badge 转为 null
+    for (const field of ['sku', 'brand', 'badge', 'seoTitle', 'seoDesc', 'seoKeywords'] as const) {
+      if (sanitized[field] === '') sanitized[field] = null
+    }
+
     const product = await prisma.product.create({ data: sanitized as never })
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
     console.error('Create product error:', error)
-    return NextResponse.json({ error: '创建产品失败' }, { status: 400 })
+    const msg = error instanceof Error ? error.message : '创建产品失败'
+    // 返回更具体的错误信息给前端
+    if (msg.includes('Unique constraint')) {
+      return NextResponse.json({ error: '产品 Slug 已存在，请使用不同的 Slug' }, { status: 400 })
+    }
+    if (msg.includes('Foreign key constraint')) {
+      return NextResponse.json({ error: '关联的分类不存在，请检查分类选择' }, { status: 400 })
+    }
+    return NextResponse.json({ error: `创建产品失败: ${msg}` }, { status: 400 })
   }
 }, ['ADMIN', 'EDITOR'])

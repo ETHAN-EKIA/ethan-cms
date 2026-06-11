@@ -1,0 +1,13 @@
+﻿node_modules
+.next
+.vercel
+.vercel-tmp
+prisma/migrations
+*.log
+scripts
+check-*.cjs
+reset-pw.cjs
+create-startup-shortcut.ps1
+ecosystem.config.cjs
+start-cms.bat
+tsconfig.tsbuildinfo

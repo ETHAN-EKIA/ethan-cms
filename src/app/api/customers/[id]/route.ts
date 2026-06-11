@@ -13,7 +13,18 @@ export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
   try {
     const data = await req.json()
-    return NextResponse.json(await prisma.customer.update({ where: { id }, data }))
+
+    if (data.email && (typeof data.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))) {
+      return NextResponse.json({ error: '邮箱格式无效' }, { status: 400 })
+    }
+
+    const allowedFields = ['name', 'country', 'email', 'whatsapp', 'phone', 'company', 'totalOrders', 'totalAmount', 'notes', 'tags']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    return NextResponse.json(await prisma.customer.update({ where: { id }, data: sanitized as never }))
   } catch { return NextResponse.json({ error: '更新客户失败' }, { status: 400 }) }
 }, ['ADMIN', 'SALES'])
 

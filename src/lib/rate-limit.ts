@@ -53,7 +53,7 @@ async function initRedis(): Promise<RedisClient | null> {
     const client = new net.Socket()
 
     let buffer = ''
-    let resolveQueue: Array<(value: string) => void> = []
+    const resolveQueue: Array<(value: string) => void> = []
 
     client.connect(port, host, () => {
       if (password) {
@@ -200,6 +200,7 @@ export function createRateLimiter(namespace: string, config: RateLimitConfig): R
 // ─── 预定义的速率限制器 ───
 
 export const loginLimiter = createRateLimiter('login', {
+  // ✅ 与接口提示文案保持一致：15 分钟窗口内最多 5 次尝试
   maxAttempts: 5,
   windowMs: 15 * 60 * 1000 // 15分钟
 })

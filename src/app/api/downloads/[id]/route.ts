@@ -4,7 +4,24 @@ import { withAuth } from '@/lib/middleware'
 
 export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
-  try { return NextResponse.json(await prisma.download.update({ where: { id }, data: await req.json() })) }
+  try {
+    const data = await req.json()
+
+    // type 验证
+    const validTypes = ['PDF', 'ZIP', 'DOC', 'OTHER']
+    if (data.type && !validTypes.includes(data.type)) {
+      return NextResponse.json({ error: `无效的文件类型` }, { status: 400 })
+    }
+
+    // 字段白名单
+    const allowedFields = ['name', 'type', 'fileUrl', 'fileSize', 'version', 'productId', 'sortOrder']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    return NextResponse.json(await prisma.download.update({ where: { id }, data: sanitized as never }))
+  }
   catch { return NextResponse.json({ error: '更新下载项失败' }, { status: 400 }) }
 }, ['ADMIN', 'EDITOR'])
 

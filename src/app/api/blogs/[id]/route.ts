@@ -11,7 +11,27 @@ export const GET = withAuth(async (req: NextRequest, { params }) => {
 
 export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
-  try { return NextResponse.json(await prisma.blog.update({ where: { id }, data: await req.json() })) }
+  try {
+    const data = await req.json()
+
+    const validStatuses = ['DRAFT', 'PUBLISHED', 'ARCHIVED']
+    if (data.status && !validStatuses.includes(data.status)) {
+      return NextResponse.json({ error: '无效的状态值' }, { status: 400 })
+    }
+
+    const allowedFields = ['title', 'slug', 'content', 'excerpt', 'coverImage', 'authorId', 'status', 'seoTitle', 'seoDesc']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    // slug 格式验证
+    if (sanitized.slug && typeof sanitized.slug === 'string' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(sanitized.slug)) {
+      return NextResponse.json({ error: 'Slug 格式无效' }, { status: 400 })
+    }
+
+    return NextResponse.json(await prisma.blog.update({ where: { id }, data: sanitized as never }))
+  }
   catch { return NextResponse.json({ error: '更新文章失败' }, { status: 400 }) }
 }, ['ADMIN', 'EDITOR'])
 

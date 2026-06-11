@@ -7,6 +7,22 @@ export const GET = withAuth(async () => {
 })
 
 export const POST = withAuth(async (req: NextRequest) => {
-  try { return NextResponse.json(await prisma.solution.create({ data: await req.json() }), { status: 201 }) }
+  try {
+    const data = await req.json()
+
+    // slug 验证
+    if (!data.slug || typeof data.slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug)) {
+      return NextResponse.json({ error: 'Slug 格式无效（仅允许小写字母、数字和连字符）' }, { status: 400 })
+    }
+
+    // 字段白名单
+    const allowedFields = ['name', 'slug', 'description', 'icon', 'image', 'productCount', 'sortOrder']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    return NextResponse.json(await prisma.solution.create({ data: sanitized as never }), { status: 201 })
+  }
   catch { return NextResponse.json({ error: '创建解决方案失败' }, { status: 400 }) }
 }, ['ADMIN', 'EDITOR'])

@@ -9,6 +9,9 @@ const ALLOWED_TYPES = new Set([
   'application/pdf', 'application/zip',
 ]);
 
+// 文件夹白名单 — 防止路径遍历攻击
+const ALLOWED_FOLDERS = new Set(['general', 'products', 'blogs', 'categories', 'solutions', 'testimonials']);
+
 // 最大文件大小：10MB
 const MAX_SIZE = 10 * 1024 * 1024;
 
@@ -54,6 +57,10 @@ export async function POST(request: NextRequest) {
     // 安全处理文件名：去除特殊字符
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const safeFolder = folder.replace(/[^a-zA-Z0-9-]/g, '') || 'general';
+    // 文件夹白名单验证（防止路径遍历攻击）
+    if (!ALLOWED_FOLDERS.has(safeFolder)) {
+      return NextResponse.json({ error: `不允许的文件夹: ${safeFolder}，仅允许: ${[...ALLOWED_FOLDERS].join(', ')}` }, { status: 400 });
+    }
     const blobPath = `${safeFolder}/${Date.now()}-${safeName}`;
 
     // 上传到 Vercel Blob（适用于 Vercel Serverless 只读文件系统）

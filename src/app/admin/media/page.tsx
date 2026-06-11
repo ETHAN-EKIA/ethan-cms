@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { apiGet, apiDelete, getToken } from '@/lib/api-client'
+import { apiGet, apiDelete } from '@/lib/api-client'
 
 interface Media { id: string; url: string; filename: string; mimeType: string; size: number; folder: string; createdAt: string }
 
@@ -23,7 +23,8 @@ export default function MediaPage() {
     fd.append('file', file)
     fd.append('folder', 'products')
     try {
-      await fetch('/api/upload', { method: 'POST', body: fd, headers: { Authorization: `Bearer ${getToken()}` } })
+      // ✅ 安全修复：同源请求自动携带 httpOnly cookie（auth_token），不再从 localStorage 注入 Bearer Token
+      await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
       load()
     } catch (e) { console.error(e) }
     finally { setLoading(false) }

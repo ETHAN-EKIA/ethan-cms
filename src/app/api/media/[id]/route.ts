@@ -17,6 +17,13 @@ export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
   try {
     const data = await req.json()
-    return NextResponse.json(await prisma.media.update({ where: { id }, data }))
+
+    const allowedFields = ['url', 'filename', 'mimeType', 'size', 'folder', 'alt']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    return NextResponse.json(await prisma.media.update({ where: { id }, data: sanitized as never }))
   } catch { return NextResponse.json({ error: '更新媒体失败' }, { status: 400 }) }
-})
+}, ['ADMIN'])

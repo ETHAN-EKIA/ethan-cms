@@ -15,6 +15,19 @@ export const GET = withAuth(async (req: NextRequest) => {
 export const POST = withAuth(async (req: NextRequest) => {
   try {
     const { key, locale, value } = await req.json()
+
+    // 输入验证
+    if (!key || typeof key !== 'string' || key.length > 200) {
+      return NextResponse.json({ error: '翻译键无效或过长' }, { status: 400 })
+    }
+    const validLocales = ['zh', 'en', 'es', 'ru', 'ar', 'fr']
+    if (!locale || !validLocales.includes(locale)) {
+      return NextResponse.json({ error: `无效的语言代码，仅支持: ${validLocales.join(', ')}` }, { status: 400 })
+    }
+    if (!value || typeof value !== 'string' || value.length > 10000) {
+      return NextResponse.json({ error: '翻译值无效或过长' }, { status: 400 })
+    }
+
     const translation = await prisma.translation.upsert({
       where: { key_locale: { key, locale } },
       update: { value },

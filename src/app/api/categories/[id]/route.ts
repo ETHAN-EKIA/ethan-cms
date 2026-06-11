@@ -6,7 +6,20 @@ export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
   try {
     const data = await req.json()
-    const category = await prisma.category.update({ where: { id }, data })
+
+    // 字段白名单
+    const allowedFields = ['name', 'slug', 'icon', 'sortOrder']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    // slug 格式验证
+    if (sanitized.slug && typeof sanitized.slug === 'string' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(sanitized.slug)) {
+      return NextResponse.json({ error: 'Slug 格式无效' }, { status: 400 })
+    }
+
+    const category = await prisma.category.update({ where: { id }, data: sanitized as never })
     return NextResponse.json(category)
   } catch (error) {
     console.error('Update category error:', error)

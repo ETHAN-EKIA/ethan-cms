@@ -5,7 +5,9 @@ import { loginLimiter } from '@/lib/rate-limit'
 import { securityLog } from '@/lib/security-log'
 
 function getClientKey(req: NextRequest): string {
-  return req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+  const raw = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+  // x-forwarded-for 可能是逗号分隔的 IP 列表，取第一个作为客户端 IP
+  return raw.split(',')[0].trim() || 'unknown'
 }
 
 export async function POST(req: NextRequest) {
@@ -54,7 +56,8 @@ export async function POST(req: NextRequest) {
     const token = signToken({ userId: user.id, username: user.username, role: user.role })
     securityLog('AUTH_SUCCESS', req, { type: 'login', userId: user.id, username: user.username })
 
-    return NextResponse.json({
+    // 构建响应并设置 auth_token cookie（供服务端中间件验证）
+    const response = NextResponse.json({
       token,
       user: {
         id: user.id,
@@ -65,6 +68,17 @@ export async function POST(req: NextRequest) {
         avatar: user.avatar
       }
     })
+
+    // 设置 httpOnly cookie，与 JWT 过期时间一致（24小时）
+    response.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24小时
+    })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })

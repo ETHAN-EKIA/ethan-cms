@@ -5,6 +5,20 @@ import { inquiryLimiter } from '@/lib/rate-limit'
 import { securityLog } from '@/lib/security-log'
 import { getPublicCorsHeaders } from '@/lib/cors'
 
+/**
+ * HTML 实体转义 — 防止存储型 XSS
+ * 将所有危险字符转换为 HTML 实体
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+}
+
 export const GET = withAuth(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const page = parseInt(searchParams.get('page') || '1')
@@ -48,7 +62,8 @@ export const POST = async (req: NextRequest) => {
 
   try {
     // 速率限制 (Redis优先)
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    const rawIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    const clientIp = rawIp.split(',')[0].trim() || 'unknown'
     const rateCheck = await inquiryLimiter.check(clientIp)
     if (!rateCheck.allowed) {
       securityLog('RATE_LIMITED', req, { type: 'inquiry', ip: clientIp, retryAfterMs: rateCheck.retryAfterMs })
@@ -70,17 +85,17 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ error: '请填写有效的邮箱地址' }, { status: 400, headers: corsHeaders })
     }
 
-    // 清理所有字符串输入防止XSS
+    // 清理所有字符串输入：HTML实体转义防止XSS + 长度限制
     const sanitizedData = {
-      name: data.name.trim().slice(0, 200),
-      email: data.email.trim().slice(0, 200),
-      country: (data.country || '').trim().slice(0, 100),
-      company: (data.company || '').trim().slice(0, 200),
-      phone: (data.phone || '').trim().slice(0, 50),
-      whatsapp: (data.whatsapp || '').trim().slice(0, 50),
+      name: escapeHtml(data.name.trim().slice(0, 200)),
+      email: data.email.trim().slice(0, 200).toLowerCase(),
+      country: escapeHtml((data.country || '').trim().slice(0, 100)),
+      company: escapeHtml((data.company || '').trim().slice(0, 200)),
+      phone: escapeHtml((data.phone || '').trim().slice(0, 50)),
+      whatsapp: escapeHtml((data.whatsapp || '').trim().slice(0, 50)),
       productId: data.productId || null,
-      quantity: (data.quantity || '').trim().slice(0, 50),
-      message: (data.message || '').trim().slice(0, 5000)
+      quantity: escapeHtml((data.quantity || '').trim().slice(0, 50)),
+      message: escapeHtml((data.message || '').trim().slice(0, 5000))
     }
 
     const inquiry = await prisma.inquiry.create({ data: sanitizedData })
@@ -90,7 +105,7 @@ export const POST = async (req: NextRequest) => {
     })
   } catch (error) {
     console.error('Create inquiry error:', error)
-    return NextResponse.json({ error: '提交询盘失败' }, { status: 400, headers: corsHeaders })
+    return NextResponse.json({ error: '提交询盘失败，请稍后重试' }, { status: 500, headers: corsHeaders })
   }
 }
 

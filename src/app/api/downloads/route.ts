@@ -8,6 +8,23 @@ export const GET = withAuth(async () => {
 })
 
 export const POST = withAuth(async (req: NextRequest) => {
-  try { return NextResponse.json(await prisma.download.create({ data: await req.json() }), { status: 201 }) }
+  try {
+    const data = await req.json()
+
+    // type 验证
+    const validTypes = ['PDF', 'ZIP', 'DOC', 'OTHER']
+    if (data.type && !validTypes.includes(data.type)) {
+      return NextResponse.json({ error: `无效的文件类型，仅允许: ${validTypes.join(', ')}` }, { status: 400 })
+    }
+
+    // 字段白名单
+    const allowedFields = ['name', 'type', 'fileUrl', 'fileSize', 'version', 'productId', 'sortOrder']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    return NextResponse.json(await prisma.download.create({ data: sanitized as never }), { status: 201 })
+  }
   catch { return NextResponse.json({ error: '创建下载项失败' }, { status: 400 }) }
 }, ['ADMIN', 'EDITOR'])

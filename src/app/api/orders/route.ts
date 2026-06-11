@@ -23,8 +23,20 @@ export const GET = withAuth(async (req: NextRequest) => {
 export const POST = withAuth(async (req: NextRequest) => {
   try {
     const data = await req.json()
+
+    const validStatuses = ['PENDING', 'PAID', 'PRODUCTION', 'SHIPPED', 'COMPLETED', 'CANCELLED']
+    if (data.status && !validStatuses.includes(data.status)) {
+      return NextResponse.json({ error: '无效的订单状态' }, { status: 400 })
+    }
+
+    const allowedFields = ['customerId', 'status', 'totalAmount', 'currency', 'trackingNo', 'notes', 'items']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
     const orderNo = `ORD-${Date.now().toString(36).toUpperCase()}`
-    const order = await prisma.order.create({ data: { ...data, orderNo } })
+    const order = await prisma.order.create({ data: { ...sanitized, orderNo } as never })
     return NextResponse.json(order, { status: 201 })
   } catch { return NextResponse.json({ error: '创建订单失败' }, { status: 400 }) }
 }, ['ADMIN', 'SALES'])

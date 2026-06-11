@@ -47,11 +47,14 @@ export function securityLog(
 ): void {
   if (!shouldLog(event)) return
 
+  const rawIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+  const ip = rawIp.split(',')[0].trim() || 'unknown'
+
   const entry: LogEntry = {
     timestamp: new Date().toISOString(),
     event,
     level: event === 'AUTH_SUCCESS' ? 'INFO' : 'WARN',
-    ip: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+    ip,
     userAgent: (req.headers.get('user-agent') || 'unknown').slice(0, 200),
     path: new URL(req.url, 'http://localhost').pathname,
     method: req.method,

@@ -23,7 +23,21 @@ export const GET = withAuth(async (req: NextRequest) => {
 export const POST = withAuth(async (req: NextRequest) => {
   try {
     const data = await req.json()
-    const customer = await prisma.customer.create({ data })
+
+    if (!data.name || typeof data.name !== 'string' || data.name.length > 200) {
+      return NextResponse.json({ error: '请填写有效的客户名称' }, { status: 400 })
+    }
+    if (data.email && (typeof data.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))) {
+      return NextResponse.json({ error: '邮箱格式无效' }, { status: 400 })
+    }
+
+    const allowedFields = ['name', 'country', 'email', 'whatsapp', 'phone', 'company', 'notes', 'tags']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    const customer = await prisma.customer.create({ data: sanitized as never })
     return NextResponse.json(customer, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: '创建客户失败' }, { status: 400 })
