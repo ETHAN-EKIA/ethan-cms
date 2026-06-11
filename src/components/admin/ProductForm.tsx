@@ -117,6 +117,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
     seoTitle: (initialData?.seoTitle as string) || '',
     seoDesc: (initialData?.seoDesc as string) || '',
     seoKeywords: (initialData?.seoKeywords as string) || '',
+    logistics: (initialData?.logistics as Record<string, unknown>) || { moq: '', leadTime: '', warranty: '', datasheet: '' },
   })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -261,6 +262,32 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
           <textarea value={form.seoDesc} onChange={e => update('seoDesc', e.target.value)} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
         <div><label className="block text-sm text-gray-600 mb-1">SEO 关键词</label>
           <input value={form.seoKeywords} onChange={e => update('seoKeywords', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="keyword1, keyword2" /></div>
+      </div>
+
+      {/* Logistics — 物流信息，与详情页正面完全匹配 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="font-semibold text-gray-800 border-b pb-2">物流信息</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label className="block text-sm text-gray-600 mb-1">MOQ（多语言，如 "10 pcs" / "10 台"）({lang})</label>
+            <input value={((form.logistics as Record<string, unknown>)?.moq as Record<string, string>)?.[lang] || ''} onChange={e => {
+              const cur = (form.logistics as Record<string, unknown>)?.moq as Record<string, string> || { zh: '', en: '', es: '' };
+              update('logistics', { ...form.logistics, moq: { ...cur, [lang]: e.target.value } });
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 10 pcs / 10 台" /></div>
+          <div><label className="block text-sm text-gray-600 mb-1">交货时间（Lead Time）({lang})</label>
+            <input value={((form.logistics as Record<string, unknown>)?.leadTime as Record<string, string>)?.[lang] || ''} onChange={e => {
+              const cur = (form.logistics as Record<string, unknown>)?.leadTime as Record<string, string> || { zh: '', en: '', es: '' };
+              update('logistics', { ...form.logistics, leadTime: { ...cur, [lang]: e.target.value } });
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 7-15 days / 7-15 天" /></div>
+          <div><label className="block text-sm text-gray-600 mb-1">质保（Warranty）({lang})</label>
+            <input value={((form.logistics as Record<string, unknown>)?.warranty as Record<string, string>)?.[lang] || ''} onChange={e => {
+              const cur = (form.logistics as Record<string, unknown>)?.warranty as Record<string, string> || { zh: '', en: '', es: '' };
+              update('logistics', { ...form.logistics, warranty: { ...cur, [lang]: e.target.value } });
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 2 years / 2 年" /></div>
+          <div><label className="block text-sm text-gray-600 mb-1">规格书文件（Datasheet）</label>
+            <input value={((form.logistics as Record<string, unknown>)?.datasheet as string) || ''} onChange={e => {
+              update('logistics', { ...form.logistics, datasheet: e.target.value });
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="/downloads/Qiaoan-PTZ-Linkage.pdf" /></div>
+        </div>
       </div>
 
       <div className="flex justify-end">

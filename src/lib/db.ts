@@ -4,7 +4,18 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 function createPrisma(): PrismaClient {
-  const adapter = new PrismaMariaDb(process.env.DATABASE_URL!)
+  const url = process.env.DATABASE_URL!
+  // 添加连接超时参数，远程数据库响应较慢
+  let finalUrl = url
+  try {
+    const urlObj = new URL(url)
+    if (!urlObj.searchParams.has('connectTimeout')) urlObj.searchParams.set('connectTimeout', '30000')
+    if (!urlObj.searchParams.has('pool_timeout')) urlObj.searchParams.set('pool_timeout', '30000')
+    finalUrl = urlObj.toString()
+  } catch {
+    // URL 解析失败则使用原始值
+  }
+  const adapter = new PrismaMariaDb(finalUrl)
   const client = new PrismaClient({
     adapter,
     log: ['warn', 'error'],
