@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 import { verifyToken } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
@@ -16,11 +17,52 @@ const ALLOWED_FOLDERS = new Set(['general', 'products', 'blogs', 'categories', '
 const MAX_SIZE = 10 * 1024 * 1024;
 
 // Next.js App Router Route Segment 配置
-export const maxDuration = 30; // 最大执行时间 30秒
+export const maxDuration = 30;
+
+/**
+ * 环境自适应文件上传
+ *
+ * - Vercel 生产环境（BLOB_READ_WRITE_TOKEN 已配置）：使用 Vercel Blob 存储
+ * - 本地开发环境（无 BLOB_READ_WRITE_TOKEN）：使用本地 public/uploads/ 目录
+ */
+async function uploadToBlob(pathname: string, file: File, token: string) {
+  const { put } = await import('@vercel/blob');
+  try {
+    return await put(pathname, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+  } catch (publicErr) {
+    const errMsg = publicErr instanceof Error ? publicErr.message : '';
+    if (errMsg.includes('private') || errMsg.includes('access')) {
+      return await put(pathname, file, {
+        access: 'private',
+        addRandomSuffix: false,
+      });
+    }
+    throw publicErr;
+  }
+}
+
+async function uploadToLocal(pathname: string, file: File): Promise<{ url: string; pathname: string }> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const fullPath = join(process.cwd(), 'public', pathname);
+  const dir = join(process.cwd(), 'public', pathname.split('/').slice(0, -1).join('/'));
+
+  // 确保目录存在
+  await mkdir(dir, { recursive: true });
+
+  // 写入文件
+  await writeFile(fullPath, buffer);
+
+  // 返回本地访问 URL
+  const url = `/${pathname.replace(/\\/g, '/')}`;
+  return { url, pathname };
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // 认证检查（从 cookie 或 Authorization header 获取 token）
+    // 认证检查
     const authHeader = request.headers.get('authorization');
     const token =
       (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null) ||
@@ -32,7 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '未授权，请先登录' }, { status: 401 });
     }
 
-    // 解析 FormData（前端 ProductForm / MediaPage 发送的是 file + folder 格式）
+    // 解析 FormData
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const folder = (formData.get('folder') as string) || 'general';
@@ -54,41 +96,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '文件大小不能超过 10MB' }, { status: 400 });
     }
 
-    // 安全处理文件名：去除特殊字符
+    // 安全处理文件名
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const safeFolder = folder.replace(/[^a-zA-Z0-9-]/g, '') || 'general';
-    // 文件夹白名单验证（防止路径遍历攻击）
+
     if (!ALLOWED_FOLDERS.has(safeFolder)) {
-      return NextResponse.json({ error: `不允许的文件夹: ${safeFolder}，仅允许: ${[...ALLOWED_FOLDERS].join(', ')}` }, { status: 400 });
-    }
-    const blobPath = `${safeFolder}/${Date.now()}-${safeName}`;
-
-    // 上传到 Vercel Blob（适用于 Vercel Serverless 只读文件系统）
-    // 先尝试 public，若 Store 为 private 模式则自动降级
-    let blob;
-    try {
-      blob = await put(blobPath, file, {
-        access: 'public',
-        addRandomSuffix: false,
-      });
-    } catch (publicErr) {
-      const errMsg = publicErr instanceof Error ? publicErr.message : '';
-      if (errMsg.includes('private') || errMsg.includes('access')) {
-        // Store 为 private 模式，改用 private 上传 + 代理路由提供访问
-        blob = await put(blobPath, file, {
-          access: 'private',
-          addRandomSuffix: false,
-        });
-      } else {
-        throw publicErr;
-      }
+      return NextResponse.json(
+        { error: `不允许的文件夹: ${safeFolder}，仅允许: ${[...ALLOWED_FOLDERS].join(', ')}` },
+        { status: 400 }
+      );
     }
 
-    // 同步创建媒体记录，使文件出现在「媒体中心」
-    // 若 private store，返回代理 URL；若 public store，返回原始 URL
-    const isPrivate = blob.url.includes('.private.blob.') || blob.url.includes('.private.');
-    const imageUrl = isPrivate ? `/api/blob?path=${blob.pathname}` : blob.url;
+    const blobPath = `uploads/${safeFolder}/${Date.now()}-${safeName}`;
 
+    // ── 环境自适应：优先 Vercel Blob，否则本地文件系统 ──
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    let imageUrl: string;
+
+    if (blobToken) {
+      // Vercel Blob 模式（生产环境）
+      const blob = await uploadToBlob(blobPath, file, blobToken);
+      const isPrivate = blob.url.includes('.private.') || blob.url.includes('.private.blob.');
+      imageUrl = isPrivate ? `/api/blob?path=${blob.pathname}` : blob.url;
+    } else {
+      // 本地文件系统模式（开发环境）
+      const result = await uploadToLocal(blobPath, file);
+      imageUrl = result.url;
+    }
+
+    // 同步创建媒体记录
     try {
       await prisma.media.create({
         data: {
@@ -100,7 +136,6 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (dbErr) {
-      // 媒体记录创建失败不阻止上传，仅记录日志
       console.warn('[Upload] 创建媒体记录失败:', dbErr);
     }
 
@@ -108,15 +143,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error);
     const msg = error instanceof Error ? error.message : '未知错误';
-
-    // 检查 BLOB_READ_WRITE_TOKEN 是否配置
-    if (msg.includes('BLOB_READ_WRITE_TOKEN') || msg.includes('token')) {
-      return NextResponse.json(
-        { error: '服务器缺少 BLOB_READ_WRITE_TOKEN 环境变量，请在 Vercel 控制台中配置 Vercel Blob' },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({ error: `上传失败: ${msg}` }, { status: 500 });
   }
 }

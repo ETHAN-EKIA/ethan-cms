@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.railway.app' },
       { protocol: 'https', hostname: '**.vercel-storage.com' },
     ],
+    // 本地上传目录（本地开发 + Docker 部署场景）
+    localPatterns: [
+      { pathname: '/uploads/**', search: '' },
+    ],
   },
   // HTTPS强制: Railway/Vercel自动处理HTTPS，此处确保HSTS头
   async headers() {
