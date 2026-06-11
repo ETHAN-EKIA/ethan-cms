@@ -1,10 +1,4 @@
 {
   "framework": "nextjs",
-  "experimentalServices": {
-    "web": {
-      "routePrefix": "/",
-      "framework": "nextjs",
-      "buildCommand": "npx prisma generate && npm run build"
-    }
-  }
+  "buildCommand": "npx prisma generate && npm run build"
 }
