@@ -25,12 +25,10 @@ export default async function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <section className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">安防摄像头</h1>
-          <p className="mt-2 text-gray-500">Security Camera Products</p>
-        </div>
+      {/* Header — minimal since NavBar is already at top */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900">安防摄像头</h1>
+        <p className="text-sm text-gray-400 mt-1">{products.length} 款产品</p>
       </section>
 
       {/* Product Grid */}

@@ -192,6 +192,31 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
         )}
 
+        {/* Installation Guide */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">安装指南</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              { step: '01', title: '选址定位', desc: '选择安装位置，确保摄像头覆盖关键监控区域，避开强光直射和遮挡物。' },
+              { step: '02', title: '固定安装', desc: '使用附赠支架和螺丝固定摄像头，确保安装牢固。户外安装建议增加防水处理。' },
+              { step: '03', title: '连接配置', desc: '连接电源和网络（PoE/WiFi/4G），扫描二维码或访问 IP 完成初始设置。' },
+            ].map((item) => (
+              <div key={item.step} className="text-center p-4 rounded-xl bg-gray-50 hover:bg-cyan-50 transition-colors">
+                <span className="text-3xl font-bold text-cyan-200">{item.step}</span>
+                <h3 className="text-sm font-semibold text-gray-800 mt-2">{item.title}</h3>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          {datasheet && (
+            <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+              <a href={datasheet} target="_blank" rel="noopener" className="text-sm text-cyan-600 hover:text-cyan-800 transition-colors">
+                📄 下载完整安装手册
+              </a>
+            </div>
+          )}
+        </div>
+
         {/* FAQ */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
           <h2 className="text-xl font-bold text-gray-800 mb-4">常见问题</h2>
