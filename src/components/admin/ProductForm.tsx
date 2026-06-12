@@ -69,7 +69,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
   const [lang, setLang] = useState<LangKey>('zh')
   const [loading, setLoading] = useState(false)
   const [translating, setTranslating] = useState(false)
-  const [slugAuto, setSlugAuto] = useState(true)
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [translateStatus, setTranslateStatus] = useState('')
 
   const [form, setForm] = useState({
@@ -100,7 +100,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
   const update = useCallback((field: string, value: unknown) => {
     setForm(prev => {
       const next = { ...prev, [field]: value } as typeof prev
-      if (field === 'name' && slugAuto) {
+      if (field === 'name' && !slugManuallyEdited) {
         const n = value as Record<string, string>
         next.slug = slugify(n.en || n.zh || '')
       }
@@ -114,14 +114,14 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       }
       return next
     })
-  }, [slugAuto, catName])
+  }, [slugManuallyEdited, catName])
 
   const updateLang = useCallback((field: string, value: string) => {
     setForm(prev => {
       const cur = (prev as Record<string, unknown>)[field] as Record<string, string>
       const updated = { ...cur, [lang]: value }
       const next = { ...prev, [field]: updated } as typeof prev
-      if (field === 'name' && slugAuto) next.slug = slugify(lang === 'en' ? value : (cur.en || value))
+      if (field === 'name' && !slugManuallyEdited) next.slug = slugify(lang === 'en' ? value : (cur.en || value))
       if (field === 'name' || field === 'summary') {
         next.seoTitle = buildSeoTitle(field === 'name' ? updated : prev.name, prev.brand, 'zh')
         next.seoDesc = buildSeoDesc(field === 'summary' ? updated : prev.summary, field === 'name' ? updated : prev.name, 'zh')
@@ -129,7 +129,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       }
       return next
     })
-  }, [lang, slugAuto, catName])
+  }, [lang, slugManuallyEdited, catName])
 
   // ── Slug uniqueness check ──
   const ensureUniqueSlug = useCallback(async (baseSlug: string): Promise<string> => {
@@ -207,7 +207,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       next.seoDesc = buildSeoDesc(sd, nd, seoLang)
       next.seoKeywords = buildSeoKeywords(nd, catName, seoLang)
 
-      if (slugAuto && nd.en?.trim()) next.slug = slugify(nd.en)
+      if (!slugManuallyEdited && nd.en?.trim()) next.slug = slugify(nd.en)
 
       return next
     } catch {
@@ -215,7 +215,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       setTranslateStatus('⚠️ 翻译服务暂不可用，英文/西语已保留中文原文，可稍后重新翻译')
       return currentForm
     }
-  }, [slugAuto, catName])
+  }, [slugManuallyEdited, catName])
 
   // ── Manual translate button ──
   const handleTranslate = async () => {
@@ -294,12 +294,9 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
               className="w-full px-3 py-2 border rounded-lg text-sm" placeholder={lang === 'zh' ? '中文产品名称（必填）' : '将自动翻译填入'} />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Slug {slugAuto && <span className="text-cyan-600 text-xs">(自动)</span>}</label>
-            <div className="flex gap-2">
-              <input value={form.slug} onChange={e => { setSlugAuto(false); update('slug', e.target.value) }} className="flex-1 px-3 py-2 border rounded-lg text-sm" required />
-              <button type="button" onClick={() => { setSlugAuto(!slugAuto); if (!slugAuto) update('slug', slugify((form.name as Record<string, string>).en || (form.name as Record<string, string>).zh || '')) }}
-                className={`px-3 py-2 text-xs rounded-lg border ${slugAuto ? 'bg-cyan-50 border-cyan-300 text-cyan-700' : 'bg-gray-50 border-gray-300 text-gray-600'}`}>{slugAuto ? '自动 ✓' : '手动'}</button>
-            </div>
+            <label className="block text-sm text-gray-600 mb-1">Slug</label>
+            <input value={form.slug} onChange={e => { setSlugManuallyEdited(true); update('slug', e.target.value) }}
+              className="w-full px-3 py-2 border rounded-lg text-sm" required />
           </div>
           <div><label className="block text-sm text-gray-600 mb-1">SKU</label><input value={form.sku} onChange={e => update('sku', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
           <div><label className="block text-sm text-gray-600 mb-1">品牌</label><input value={form.brand} onChange={e => update('brand', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
