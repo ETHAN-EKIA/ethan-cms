@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 
 interface ProductDetail {
   id: string
@@ -23,7 +24,10 @@ interface ProductDetail {
 export const dynamic = 'force-dynamic'
 
 async function getProduct(id: string): Promise<ProductDetail | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'
+  const heads = await headers()
+  const host = heads.get('host') || 'localhost:3001'
+  const proto = heads.get('x-forwarded-proto') || 'http'
+  const baseUrl = `${proto}://${host}`
   try {
     const res = await fetch(`${baseUrl}/api/public/products/${id}`, {
       next: { revalidate: 300 },

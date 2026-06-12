@@ -1,9 +1,13 @@
 import ProductCard, { type ProductCardData } from '@/components/public/ProductCard'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
 async function getProducts(): Promise<ProductCardData[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'
+  const heads = await headers()
+  const host = heads.get('host') || 'localhost:3001'
+  const proto = heads.get('x-forwarded-proto') || 'http'
+  const baseUrl = `${proto}://${host}`
   try {
     const res = await fetch(`${baseUrl}/api/public/products?limit=100`, {
       next: { revalidate: 300 }, // ISR: 5分钟缓存
