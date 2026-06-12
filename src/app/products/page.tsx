@@ -24,16 +24,16 @@ export default async function ProductsPage() {
   const products = await getProducts()
 
   return (
-    <div className="min-h-screen bg-[#0c1117]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-        <h1 className="text-2xl font-bold text-[#f8fbff]">安防摄像头</h1>
-        <p className="text-sm text-[#a8b8cc] mt-1">{products.length} 款产品</p>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">安防摄像头</h1>
+        <p className="text-sm text-[#5C5C5C] mt-1">{products.length} 款产品</p>
       </section>
 
       {/* Product Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {products.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
+          <div className="text-center py-20 text-[#5C5C5C]">
             <p className="text-lg">暂无产品</p>
           </div>
         ) : (
@@ -50,7 +50,7 @@ export default async function ProductsPage() {
               <div className="flex justify-center mt-10">
                 <button
                   type="button"
-                  className="px-8 py-3 text-sm font-medium text-cyan-600 bg-white border-2 border-cyan-200 rounded-full hover:bg-cyan-50 hover:border-cyan-400 transition-all"
+                  className="px-8 py-3 text-sm font-medium text-[#0066FF] bg-white border-2 border-[#0066FF]/20 rounded-full hover:bg-[#F8F9FA] hover:border-[#0066FF]/50 transition-all"
                 >
                   查看全部
                 </button>
@@ -61,7 +61,7 @@ export default async function ProductsPage() {
       </section>
 
       {/* Footer hint */}
-      <footer className="text-center py-8 text-xs text-[#a8b8cc]">
+      <footer className="text-center py-8 text-xs text-[#5C5C5C]">
         ETHAN Security Camera — Professional Surveillance Solutions
       </footer>
     </div>
