@@ -24,11 +24,10 @@ export default async function ProductsPage() {
   const products = await getProducts()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header — minimal since NavBar is already at top */}
+    <div className="min-h-screen bg-[#0c1117]">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">安防摄像头</h1>
-        <p className="text-sm text-gray-400 mt-1">{products.length} 款产品</p>
+        <h1 className="text-2xl font-bold text-[#f8fbff]">安防摄像头</h1>
+        <p className="text-sm text-[#a8b8cc] mt-1">{products.length} 款产品</p>
       </section>
 
       {/* Product Grid */}
@@ -62,7 +61,7 @@ export default async function ProductsPage() {
       </section>
 
       {/* Footer hint */}
-      <footer className="text-center py-8 text-xs text-gray-400">
+      <footer className="text-center py-8 text-xs text-[#a8b8cc]">
         ETHAN Security Camera — Professional Surveillance Solutions
       </footer>
     </div>

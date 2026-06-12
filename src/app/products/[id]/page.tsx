@@ -64,21 +64,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const warranty = (log?.warranty as Record<string, string>)?.zh || ''
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0c1117]">
       {/* Hero Section */}
-      <section className="bg-white border-b">
+      <section className="bg-[#1a2330] border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
           {/* Breadcrumb */}
-          <nav className="text-sm text-gray-400 mb-6">
-            <Link href="/products" className="hover:text-cyan-600 transition-colors">产品列表</Link>
+          <nav className="text-sm text-[#a8b8cc] mb-6">
+            <Link href="/products" className="hover:text-[#00c8ff] transition-colors">产品列表</Link>
             <span className="mx-2">/</span>
-            <span className="text-gray-600">{name}</span>
+            <span className="text-[#a8b8cc]">{name}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Image Gallery */}
             <div className="space-y-4">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 border border-gray-200">
+              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[#222d3c] border border-gray-200">
                 <img
                   src={getImageUrl(product.images?.main)}
                   alt={name}
@@ -88,7 +88,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {gallery.length > 0 && (
                 <div className="grid grid-cols-4 gap-3">
                   {gallery.slice(0, 4).map((url, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:border-cyan-400 transition-colors">
+                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-[#222d3c] border border-gray-200 cursor-pointer hover:border-[#00c8ff]/50 transition-colors">
                       <img src={getImageUrl(url)} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   ))}
@@ -103,24 +103,24 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   {product.badge === 'bestseller' ? '热卖' : product.badge === 'new' ? '新品' : product.badge === 'hot' ? '爆款' : product.badge === 'sale' ? '促销' : product.badge}
                 </span>
               )}
-              <h1 className="text-3xl font-bold text-gray-900">{name}</h1>
-              {product.brand && <p className="text-gray-500">{product.brand}</p>}
+              <h1 className="text-3xl font-bold text-[#f8fbff]">{name}</h1>
+              {product.brand && <p className="text-[#a8b8cc]">{product.brand}</p>}
 
               {/* Price */}
               <div className="flex items-baseline gap-2">
-                <span className="text-sm text-gray-400">起</span>
-                <span className="text-4xl font-bold text-blue-600">${Number(product.price).toFixed(2)}</span>
-                {product.moq && product.moq > 1 && <span className="text-sm text-gray-400">/ MOQ: {product.moq}</span>}
+                <span className="text-sm text-[#a8b8cc]">起</span>
+                <span className="text-4xl font-bold text-[#00c8ff]">${Number(product.price).toFixed(2)}</span>
+                {product.moq && product.moq > 1 && <span className="text-sm text-[#a8b8cc]">/ MOQ: {product.moq}</span>}
               </div>
 
               {/* Key Highlights */}
               {highlights.filter(h => h.zh?.trim()).length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-700">核心卖点</h3>
+                  <h3 className="text-sm font-semibold text-[#e2e8f2]">核心卖点</h3>
                   <ul className="space-y-1.5">
                     {highlights.filter(h => h.zh?.trim()).map((h, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                        <span className="text-cyan-500 mt-1">✓</span>
+                      <li key={i} className="flex items-start gap-2 text-sm text-[#a8b8cc]">
+                        <span className="text-[#00c8ff] mt-1">✓</span>
                         <span>{h.zh}</span>
                       </li>
                     ))}
@@ -129,7 +129,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               )}
 
               {/* Inquiry Button */}
-              <button className="w-full sm:w-auto px-8 py-3 bg-cyan-600 text-white font-medium rounded-xl hover:bg-cyan-700 transition-colors shadow-lg shadow-cyan-100">
+              <button className="w-full sm:w-auto px-8 py-3 bg-[#00c8ff] text-white font-medium rounded-xl hover:bg-[#2bd4ff] transition-colors shadow-lg shadow-[#00c8ff]/20">
                 立即询价
               </button>
             </div>
@@ -141,23 +141,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
         {/* Product Summary */}
         {summary && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">产品介绍</h2>
-            <p className="text-gray-600 leading-relaxed">{summary}</p>
+          <div className="bg-[#1a2330] rounded-xl border border-gray-100 p-6 lg:p-8 shadow">
+            <h2 className="text-xl font-bold text-[#f8fbff] mb-4">产品介绍</h2>
+            <p className="text-[#a8b8cc] leading-relaxed">{summary}</p>
           </div>
         )}
 
         {/* Specs Table */}
         {details.length > 0 && details.some(row => (row[0] as Record<string, string>)?.zh?.trim()) && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">规格参数</h2>
+          <div className="bg-[#1a2330] rounded-xl border border-gray-100 p-6 lg:p-8 shadow">
+            <h2 className="text-xl font-bold text-[#f8fbff] mb-4">规格参数</h2>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <tbody>
                   {details.filter(row => (row[0] as Record<string, string>)?.zh?.trim()).map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? 'bg-gray-50' : 'bg-white'} border-b border-gray-100 last:border-0`}>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-700 w-1/3">{(row[0] as Record<string, string>)?.zh || ''}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{(row[1] as Record<string, string>)?.zh || ''}</td>
+                    <tr key={i} className={`${i % 2 === 0 ? 'bg-[#0c1117]' : 'bg-[#1a2330]'} border-b border-gray-100 last:border-0`}>
+                      <td className="px-4 py-3 text-sm font-medium text-[#e2e8f2] w-1/3">{(row[0] as Record<string, string>)?.zh || ''}</td>
+                      <td className="px-4 py-3 text-sm text-[#a8b8cc]">{(row[1] as Record<string, string>)?.zh || ''}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -168,11 +168,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         {/* Gallery / Scene Photos */}
         {gallery.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">产品实拍 / 场景</h2>
+          <div className="bg-[#1a2330] rounded-xl border border-gray-100 p-6 lg:p-8 shadow">
+            <h2 className="text-xl font-bold text-[#f8fbff] mb-4">产品实拍 / 场景</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {gallery.map((url, i) => (
-                <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden bg-[#222d3c] border border-gray-200">
                   <img src={getImageUrl(url)} alt={`${name} scene ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                 </div>
               ))}
@@ -182,35 +182,35 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         {/* Logistics & Warranty */}
         {(moqLog || leadTime || warranty) && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">物流 & 质保</h2>
+          <div className="bg-[#1a2330] rounded-xl border border-gray-100 p-6 lg:p-8 shadow">
+            <h2 className="text-xl font-bold text-[#f8fbff] mb-4">物流 & 质保</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {moqLog && <div><span className="text-xs text-gray-400 uppercase">MOQ</span><p className="text-lg font-semibold text-gray-800">{moqLog}</p></div>}
-              {leadTime && <div><span className="text-xs text-gray-400 uppercase">交货时间</span><p className="text-lg font-semibold text-gray-800">{leadTime}</p></div>}
-              {warranty && <div><span className="text-xs text-gray-400 uppercase">质保</span><p className="text-lg font-semibold text-gray-800">{warranty}</p></div>}
+              {moqLog && <div><span className="text-xs text-[#a8b8cc] uppercase">MOQ</span><p className="text-lg font-semibold text-[#f8fbff]">{moqLog}</p></div>}
+              {leadTime && <div><span className="text-xs text-[#a8b8cc] uppercase">交货时间</span><p className="text-lg font-semibold text-[#f8fbff]">{leadTime}</p></div>}
+              {warranty && <div><span className="text-xs text-[#a8b8cc] uppercase">质保</span><p className="text-lg font-semibold text-[#f8fbff]">{warranty}</p></div>}
             </div>
           </div>
         )}
 
         {/* Installation Guide */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">安装指南</h2>
+        <div className="bg-[#1a2330] rounded-xl border border-gray-100 p-6 lg:p-8 shadow">
+          <h2 className="text-xl font-bold text-[#f8fbff] mb-4">安装指南</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { step: '01', title: '选址定位', desc: '选择安装位置，确保摄像头覆盖关键监控区域，避开强光直射和遮挡物。' },
               { step: '02', title: '固定安装', desc: '使用附赠支架和螺丝固定摄像头，确保安装牢固。户外安装建议增加防水处理。' },
               { step: '03', title: '连接配置', desc: '连接电源和网络（PoE/WiFi/4G），扫描二维码或访问 IP 完成初始设置。' },
             ].map((item) => (
-              <div key={item.step} className="text-center p-4 rounded-xl bg-gray-50 hover:bg-cyan-50 transition-colors">
-                <span className="text-3xl font-bold text-cyan-200">{item.step}</span>
-                <h3 className="text-sm font-semibold text-gray-800 mt-2">{item.title}</h3>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.desc}</p>
+              <div key={item.step} className="text-center p-4 rounded-xl bg-[#0c1117] hover:bg-[#1a2330] transition-colors">
+                <span className="text-3xl font-bold text-[#00c8ff]/40">{item.step}</span>
+                <h3 className="text-sm font-semibold text-[#f8fbff] mt-2">{item.title}</h3>
+                <p className="text-xs text-[#a8b8cc] mt-1 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
           {datasheet && (
             <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-              <a href={datasheet} target="_blank" rel="noopener" className="text-sm text-cyan-600 hover:text-cyan-800 transition-colors">
+              <a href={datasheet} target="_blank" rel="noopener" className="text-sm text-[#00c8ff] hover:text-[#2bd4ff] transition-colors">
                 📄 下载完整安装手册
               </a>
             </div>
@@ -218,8 +218,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {/* FAQ */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">常见问题</h2>
+        <div className="bg-[#1a2330] rounded-xl border border-gray-100 p-6 lg:p-8 shadow">
+          <h2 className="text-xl font-bold text-[#f8fbff] mb-4">常见问题</h2>
           <div className="space-y-4">
             {[
               { q: '如何下单？', a: '点击「立即询价」按钮提交需求，我们的销售团队会在24小时内联系您。' },
@@ -227,12 +227,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               { q: '质保期多久？', a: `${warranty || '标准2年质保'}，可延长至3-5年。` },
               { q: '支持定制吗？', a: '支持 OEM/ODM，包括 LOGO、包装、UI界面、功能模块的深度定制。' },
             ].map((faq, i) => (
-              <details key={i} className="group border border-gray-100 rounded-xl p-4 hover:border-cyan-200 transition-colors">
-                <summary className="text-sm font-medium text-gray-800 cursor-pointer list-none flex justify-between items-center">
+              <details key={i} className="group border border-gray-100 rounded-xl p-4 hover:border-[#00c8ff]/30 transition-colors">
+                <summary className="text-sm font-medium text-[#f8fbff] cursor-pointer list-none flex justify-between items-center">
                   {faq.q}
-                  <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-[#a8b8cc] group-open:rotate-180 transition-transform">▼</span>
                 </summary>
-                <p className="mt-3 text-sm text-gray-600 leading-relaxed">{faq.a}</p>
+                <p className="mt-3 text-sm text-[#a8b8cc] leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
@@ -241,7 +241,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
       {/* Back */}
       <footer className="text-center py-8">
-        <Link href="/products" className="text-sm text-cyan-600 hover:text-cyan-800 transition-colors">
+        <Link href="/products" className="text-sm text-[#00c8ff] hover:text-[#2bd4ff] transition-colors">
           ← 返回产品列表
         </Link>
       </footer>
