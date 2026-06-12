@@ -201,10 +201,11 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       next.name = nd; next.summary = sd; next.highlights = nhl; next.details = ndt
       nlog.moq = nmoq; nlog.leadTime = nlt; nlog.warranty = nwt; next.logistics = nlog
 
-      // SEO per-language
-      next.seoTitle = buildSeoTitle(nd, currentForm.brand, 'zh')
-      next.seoDesc = buildSeoDesc(sd, nd, 'zh')
-      next.seoKeywords = buildSeoKeywords(nd, catName, 'zh')
+      // SEO：翻译后以英文为主（Google 索引首选），fallback 中文
+      const seoLang: LangKey = nd.en?.trim() ? 'en' : 'zh'
+      next.seoTitle = buildSeoTitle(nd, currentForm.brand, seoLang)
+      next.seoDesc = buildSeoDesc(sd, nd, seoLang)
+      next.seoKeywords = buildSeoKeywords(nd, catName, seoLang)
 
       if (slugAuto && nd.en?.trim()) next.slug = slugify(nd.en)
 
