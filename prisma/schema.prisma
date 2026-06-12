@@ -92,9 +92,9 @@ model Product {
   details     Json?         // [[key, value], ...]
   logistics   Json?         // { moq, leadTime, warranty, datasheet }
   images      Json?         // { main, gallery[] }
-  seoTitle    String?       @db.Text
-  seoDesc     String?       @db.Text
-  seoKeywords String?       @db.Text
+  seoTitle    Json?         // { zh, en, es }
+  seoDesc     Json?         // { zh, en, es }
+  seoKeywords Json?         // { zh, en, es }
   status      ProductStatus @default(ACTIVE)
   sortOrder   Int           @default(0)
   createdAt   DateTime      @default(now())

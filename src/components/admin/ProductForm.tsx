@@ -26,20 +26,22 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-+|-+$/g, '').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').substring(0, 80)
 }
 
-function buildSeoTitle(name: Record<string, string>, brand: string, lang: LangKey): string {
-  const n = name[lang] || name.en || name.zh || ''
+function buildSeoObj(name: Record<string, string>, summary: Record<string, string>, brand: string, cat: string, lang: LangKey): { title: Record<string,string>; desc: Record<string,string>; kw: Record<string,string> } {
+  const title: Record<string,string> = { zh:'', en:'', es:'' }
+  const desc: Record<string,string> = { zh:'', en:'', es:'' }
+  const kw: Record<string,string> = { zh:'', en:'', es:'' }
   const suffix = brand ? ` - ${brand}` : ` - ${BRAND_TAGLINE}`
-  return `${n}${suffix}`.substring(0, SEO_MAX.title)
-}
-function buildSeoDesc(summary: Record<string, string>, name: Record<string, string>, lang: LangKey): string {
-  const s = summary[lang] || summary.en || summary.zh || name[lang] || name.en || ''
-  return `${s}。Professional security solutions for home & business.`.substring(0, SEO_MAX.desc)
-}
-function buildSeoKeywords(name: Record<string, string>, cat: string, lang: LangKey): string {
-  const parts = [name[lang] || name.en || '']
-  if (cat) parts.push(cat)
-  parts.push('security camera', 'CCTV', 'surveillance', 'ETHAN')
-  return parts.filter(Boolean).join(', ').substring(0, SEO_MAX.keywords)
+  for (const l of ['zh','en','es'] as LangKey[]) {
+    const n = name[l] || name.en || name.zh || ''
+    const s = summary[l] || summary.en || summary.zh || n
+    title[l] = `${n}${suffix}`.substring(0, SEO_MAX.title)
+    desc[l] = `${s}。Professional security solutions for home & business.`.substring(0, SEO_MAX.desc)
+    const parts = [name[l] || name.en || '']
+    if (cat) parts.push(cat)
+    parts.push('security camera', 'CCTV', 'surveillance', 'ETHAN')
+    kw[l] = parts.filter(Boolean).join(', ').substring(0, SEO_MAX.keywords)
+  }
+  return { title, desc, kw }
 }
 
 function needsTranslation(name: Record<string, string>, summary: Record<string, string>, highlights: Array<Record<string, string>>): boolean {
@@ -88,9 +90,9 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
     highlights: (initialData?.highlights as Array<Record<string, string>>) || [{ zh: '', en: '', es: '' }],
     details: (initialData?.details as Array<Array<Record<string, string> | string>>) || [[{ zh: '', en: '', es: '' }, { zh: '', en: '', es: '' }]],
     images: (initialData?.images as { main: string; gallery: string[] }) || { main: '', gallery: [] },
-    seoTitle: (initialData?.seoTitle as string) || '',
-    seoDesc: (initialData?.seoDesc as string) || '',
-    seoKeywords: (initialData?.seoKeywords as string) || '',
+    seoTitle: (initialData?.seoTitle as Record<string, string>) || { zh: '', en: '', es: '' },
+    seoDesc: (initialData?.seoDesc as Record<string, string>) || { zh: '', en: '', es: '' },
+    seoKeywords: (initialData?.seoKeywords as Record<string, string>) || { zh: '', en: '', es: '' },
     logistics: (initialData?.logistics as Record<string, unknown>) || { moq: { zh: '', en: '', es: '' }, leadTime: { zh: '', en: '', es: '' }, warranty: { zh: '', en: '', es: '' }, datasheet: '' },
   })
 
@@ -104,13 +106,12 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
         const n = value as Record<string, string>
         next.slug = slugify(n.en || n.zh || '')
       }
-      if ((field === 'name' || field === 'summary' || field === 'brand' || field === 'categoryId') && !prev.seoTitle?.trim()) {
+      if (field === 'name' || field === 'summary' || field === 'brand' || field === 'categoryId') {
         const nd = field === 'name' ? (value as Record<string, string>) : prev.name
         const sd = field === 'summary' ? (value as Record<string, string>) : prev.summary
         const bd = field === 'brand' ? (value as string) : prev.brand
-        next.seoTitle = buildSeoTitle(nd, bd, 'zh')
-        next.seoDesc = buildSeoDesc(sd, nd, 'zh')
-        next.seoKeywords = buildSeoKeywords(nd, catName, 'zh')
+        const seo = buildSeoObj(nd, sd, bd, catName, lang)
+        next.seoTitle = seo.title; next.seoDesc = seo.desc; next.seoKeywords = seo.kw
       }
       return next
     })
@@ -123,9 +124,10 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       const next = { ...prev, [field]: updated } as typeof prev
       if (field === 'name' && !slugManuallyEdited) next.slug = slugify(lang === 'en' ? value : (cur.en || value))
       if (field === 'name' || field === 'summary') {
-        next.seoTitle = buildSeoTitle(field === 'name' ? updated : prev.name, prev.brand, 'zh')
-        next.seoDesc = buildSeoDesc(field === 'summary' ? updated : prev.summary, field === 'name' ? updated : prev.name, 'zh')
-        next.seoKeywords = buildSeoKeywords(field === 'name' ? updated : prev.name, catName, 'zh')
+        const nd = field === 'name' ? updated : prev.name
+        const sd = field === 'summary' ? updated : prev.summary
+        const seo = buildSeoObj(nd, sd, prev.brand, catName, lang)
+        next.seoTitle = seo.title; next.seoDesc = seo.desc; next.seoKeywords = seo.kw
       }
       return next
     })
@@ -140,7 +142,11 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
     } catch { return baseSlug }
   }, [initialData])
 
-  // ── Auto-translate ALL fields ──
+  // ── 判断文本是否需要翻译 ──
+function shouldTranslate(text: string): boolean {
+  // 不含中文/日文/韩文 → 可能是纯数字/单位/英文，跳过
+  return /[一-鿿぀-ゟ゠-ヿ가-힯]/.test(text)
+}
   const autoTranslateAll = useCallback(async (currentForm: typeof form) => {
     const nameD = currentForm.name as Record<string, string>
     const summD = currentForm.summary as Record<string, string>
@@ -157,7 +163,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       const param = (row[0] as Record<string, string>).zh?.trim()
       const val = (row[1] as Record<string, string>).zh?.trim()
       if (param) tasks.push({ text: param, key: `dt_p_${i}` })
-      if (val) tasks.push({ text: val, key: `dt_v_${i}` })
+      if (val && shouldTranslate(val)) tasks.push({ text: val, key: `dt_v_${i}` })
     })
     // Logistics
     const moq = (log.moq as Record<string, string>)?.zh?.trim()
@@ -201,11 +207,9 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
       next.name = nd; next.summary = sd; next.highlights = nhl; next.details = ndt
       nlog.moq = nmoq; nlog.leadTime = nlt; nlog.warranty = nwt; next.logistics = nlog
 
-      // SEO：翻译后以英文为主（Google 索引首选），fallback 中文
-      const seoLang: LangKey = nd.en?.trim() ? 'en' : 'zh'
-      next.seoTitle = buildSeoTitle(nd, currentForm.brand, seoLang)
-      next.seoDesc = buildSeoDesc(sd, nd, seoLang)
-      next.seoKeywords = buildSeoKeywords(nd, catName, seoLang)
+      // SEO：翻译后每种语言独立生成
+      const seo = buildSeoObj(nd, sd, currentForm.brand, catName, 'zh')
+      next.seoTitle = seo.title; next.seoDesc = seo.desc; next.seoKeywords = seo.kw
 
       if (!slugManuallyEdited && nd.en?.trim()) next.slug = slugify(nd.en)
 
@@ -336,13 +340,13 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
 
       {/* ── SEO (auto-generated, editable) ── */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="font-semibold text-gray-800 border-b pb-2">SEO <span className="text-cyan-600 text-xs font-normal">(自动生成，可手动修改)</span></h2>
-        <div><label className="block text-sm text-gray-600 mb-1">SEO 标题 <span className="text-gray-400">({form.seoTitle.length}/{SEO_MAX.title})</span></label>
-          <input value={form.seoTitle} onChange={e => update('seoTitle', e.target.value)} maxLength={SEO_MAX.title} className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" /></div>
-        <div><label className="block text-sm text-gray-600 mb-1">SEO 描述 <span className="text-gray-400">({form.seoDesc.length}/{SEO_MAX.desc})</span></label>
-          <textarea value={form.seoDesc} onChange={e => update('seoDesc', e.target.value)} maxLength={SEO_MAX.desc} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" /></div>
-        <div><label className="block text-sm text-gray-600 mb-1">SEO 关键词 <span className="text-gray-400">({form.seoKeywords.length}/{SEO_MAX.keywords})</span></label>
-          <input value={form.seoKeywords} onChange={e => update('seoKeywords', e.target.value)} maxLength={SEO_MAX.keywords} className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" /></div>
+        <h2 className="font-semibold text-gray-800 border-b pb-2">SEO <span className="text-cyan-600 text-xs font-normal">({lang==='zh'?'中文':lang==='en'?'English':'Español'} — 可修改)</span></h2>
+        <div><label className="block text-sm text-gray-600 mb-1">SEO 标题 <span className="text-gray-400">({(form.seoTitle[lang]||'').length}/{SEO_MAX.title})</span></label>
+          <input value={form.seoTitle[lang] || ''} onChange={e => { const t = {...form.seoTitle}; t[lang]=e.target.value.slice(0,SEO_MAX.title); update('seoTitle',t) }} className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" /></div>
+        <div><label className="block text-sm text-gray-600 mb-1">SEO 描述 <span className="text-gray-400">({(form.seoDesc[lang]||'').length}/{SEO_MAX.desc})</span></label>
+          <textarea value={form.seoDesc[lang] || ''} onChange={e => { const d = {...form.seoDesc}; d[lang]=e.target.value.slice(0,SEO_MAX.desc); update('seoDesc',d) }} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" /></div>
+        <div><label className="block text-sm text-gray-600 mb-1">SEO 关键词 <span className="text-gray-400">({(form.seoKeywords[lang]||'').length}/{SEO_MAX.keywords})</span></label>
+          <input value={form.seoKeywords[lang] || ''} onChange={e => { const k = {...form.seoKeywords}; k[lang]=e.target.value.slice(0,SEO_MAX.keywords); update('seoKeywords',k) }} className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" /></div>
       </div>
 
       {/* ── Logistics ── */}
