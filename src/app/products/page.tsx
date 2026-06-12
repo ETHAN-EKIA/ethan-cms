@@ -26,14 +26,14 @@ export default async function ProductsPage() {
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">安防摄像头</h1>
-        <p className="text-sm text-[#5C5C5C] mt-1">{products.length} 款产品</p>
+        <h1 className="text-2xl font-bold text-[#111827]">安防摄像头</h1>
+        <p className="text-sm text-[#6B7280] mt-1">{products.length} 款产品</p>
       </section>
 
       {/* Product Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {products.length === 0 ? (
-          <div className="text-center py-20 text-[#5C5C5C]">
+          <div className="text-center py-20 text-[#6B7280]">
             <p className="text-lg">暂无产品</p>
           </div>
         ) : (
@@ -61,7 +61,7 @@ export default async function ProductsPage() {
       </section>
 
       {/* Footer hint */}
-      <footer className="text-center py-8 text-xs text-[#5C5C5C]">
+      <footer className="text-center py-8 text-xs text-[#9CA3AF]">
         ETHAN Security Camera — Professional Surveillance Solutions
       </footer>
     </div>

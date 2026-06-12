@@ -24,7 +24,7 @@ export default function NavBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link href="/products" className="flex items-center gap-2 text-[#000000] hover:text-[#0066FF] transition-colors">
           <span className="text-lg font-bold tracking-tight">ETHAN</span>
-          <span className="hidden sm:inline text-xs text-[#5C5C5C] font-normal">Security Camera</span>
+          <span className="hidden sm:inline text-xs text-[#6B7280] font-normal">Security Camera</span>
         </Link>
 
         <div className="flex items-center gap-3 text-sm">

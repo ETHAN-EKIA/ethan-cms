@@ -69,10 +69,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <section className="bg-[#F8F9FA] border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
           {/* Breadcrumb */}
-          <nav className="text-sm text-[#5C5C5C] mb-6">
+          <nav className="text-sm text-[#6B7280] mb-6">
             <Link href="/products" className="hover:text-[#0066FF] transition-colors">产品列表</Link>
             <span className="mx-2">/</span>
-            <span className="text-[#5C5C5C]">{name}</span>
+            <span className="text-[#6B7280]">{name}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -103,23 +103,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   {product.badge === 'bestseller' ? '热卖' : product.badge === 'new' ? '新品' : product.badge === 'hot' ? '爆款' : product.badge === 'sale' ? '促销' : product.badge}
                 </span>
               )}
-              <h1 className="text-3xl font-bold text-[#1A1A1A]">{name}</h1>
-              {product.brand && <p className="text-[#5C5C5C]">{product.brand}</p>}
+              <h1 className="text-3xl font-bold text-[#111827]">{name}</h1>
+              {product.brand && <p className="text-[#374151]">{product.brand}</p>}
 
               {/* Price */}
               <div className="flex items-baseline gap-2">
-                <span className="text-sm text-[#5C5C5C]">起</span>
+                <span className="text-sm text-[#374151]">起</span>
                 <span className="text-4xl font-bold text-[#0066FF]">${Number(product.price).toFixed(2)}</span>
-                {product.moq && product.moq > 1 && <span className="text-sm text-[#5C5C5C]">/ MOQ: {product.moq}</span>}
+                {product.moq && product.moq > 1 && <span className="text-sm text-[#374151]">/ MOQ: {product.moq}</span>}
               </div>
 
               {/* Key Highlights */}
               {highlights.filter(h => h.zh?.trim()).length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-[#1A1A1A]">核心卖点</h3>
+                  <h3 className="text-sm font-semibold text-[#111827]">核心卖点</h3>
                   <ul className="space-y-1.5">
                     {highlights.filter(h => h.zh?.trim()).map((h, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-[#5C5C5C]">
+                      <li key={i} className="flex items-start gap-2 text-sm text-[#374151]">
                         <span className="text-[#0066FF] mt-1">✓</span>
                         <span>{h.zh}</span>
                       </li>
@@ -142,22 +142,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {/* Product Summary */}
         {summary && (
           <div className="bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] p-6 lg:p-8 shadow">
-            <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">产品介绍</h2>
-            <p className="text-[#5C5C5C] leading-relaxed">{summary}</p>
+            <h2 className="text-xl font-bold text-[#111827] mb-4">产品介绍</h2>
+            <p className="text-[#374151] leading-relaxed">{summary}</p>
           </div>
         )}
 
         {/* Specs Table */}
         {details.length > 0 && details.some(row => (row[0] as Record<string, string>)?.zh?.trim()) && (
           <div className="bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] p-6 lg:p-8 shadow">
-            <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">规格参数</h2>
+            <h2 className="text-xl font-bold text-[#111827] mb-4">规格参数</h2>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <tbody>
                   {details.filter(row => (row[0] as Record<string, string>)?.zh?.trim()).map((row, i) => (
                     <tr key={i} className={`${i % 2 === 0 ? 'bg-[#FFFFFF]' : 'bg-[#F8F9FA]'} border-b border-[#E5E7EB] last:border-0`}>
-                      <td className="px-4 py-3 text-sm font-medium text-[#1A1A1A] w-1/3">{(row[0] as Record<string, string>)?.zh || ''}</td>
-                      <td className="px-4 py-3 text-sm text-[#5C5C5C]">{(row[1] as Record<string, string>)?.zh || ''}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-[#111827] w-1/3">{(row[0] as Record<string, string>)?.zh || ''}</td>
+                      <td className="px-4 py-3 text-sm text-[#374151]">{(row[1] as Record<string, string>)?.zh || ''}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -169,7 +169,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {/* Gallery / Scene Photos */}
         {gallery.length > 0 && (
           <div className="bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] p-6 lg:p-8 shadow">
-            <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">产品实拍 / 场景</h2>
+            <h2 className="text-xl font-bold text-[#111827] mb-4">产品实拍 / 场景</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {gallery.map((url, i) => (
                 <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden bg-[#E5E7EB] border border-[#E5E7EB]">
@@ -183,18 +183,18 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {/* Logistics & Warranty */}
         {(moqLog || leadTime || warranty) && (
           <div className="bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] p-6 lg:p-8 shadow">
-            <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">物流 & 质保</h2>
+            <h2 className="text-xl font-bold text-[#111827] mb-4">物流 & 质保</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {moqLog && <div><span className="text-xs text-[#5C5C5C] uppercase">MOQ</span><p className="text-lg font-semibold text-[#1A1A1A]">{moqLog}</p></div>}
-              {leadTime && <div><span className="text-xs text-[#5C5C5C] uppercase">交货时间</span><p className="text-lg font-semibold text-[#1A1A1A]">{leadTime}</p></div>}
-              {warranty && <div><span className="text-xs text-[#5C5C5C] uppercase">质保</span><p className="text-lg font-semibold text-[#1A1A1A]">{warranty}</p></div>}
+              {moqLog && <div><span className="text-xs text-[#374151] uppercase">MOQ</span><p className="text-lg font-semibold text-[#111827]">{moqLog}</p></div>}
+              {leadTime && <div><span className="text-xs text-[#374151] uppercase">交货时间</span><p className="text-lg font-semibold text-[#111827]">{leadTime}</p></div>}
+              {warranty && <div><span className="text-xs text-[#374151] uppercase">质保</span><p className="text-lg font-semibold text-[#111827]">{warranty}</p></div>}
             </div>
           </div>
         )}
 
         {/* Installation Guide */}
         <div className="bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] p-6 lg:p-8 shadow">
-          <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">安装指南</h2>
+          <h2 className="text-xl font-bold text-[#111827] mb-4">安装指南</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { step: '01', title: '选址定位', desc: '选择安装位置，确保摄像头覆盖关键监控区域，避开强光直射和遮挡物。' },
@@ -203,8 +203,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             ].map((item) => (
               <div key={item.step} className="text-center p-4 rounded-xl bg-[#FFFFFF] hover:bg-[#F8F9FA] transition-colors">
                 <span className="text-3xl font-bold text-[#0066FF]/40">{item.step}</span>
-                <h3 className="text-sm font-semibold text-[#1A1A1A] mt-2">{item.title}</h3>
-                <p className="text-xs text-[#5C5C5C] mt-1 leading-relaxed">{item.desc}</p>
+                <h3 className="text-sm font-semibold text-[#111827] mt-2">{item.title}</h3>
+                <p className="text-xs text-[#374151] mt-1 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -219,7 +219,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         {/* FAQ */}
         <div className="bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] p-6 lg:p-8 shadow">
-          <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">常见问题</h2>
+          <h2 className="text-xl font-bold text-[#111827] mb-4">常见问题</h2>
           <div className="space-y-4">
             {[
               { q: '如何下单？', a: '点击「立即询价」按钮提交需求，我们的销售团队会在24小时内联系您。' },
@@ -228,11 +228,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               { q: '支持定制吗？', a: '支持 OEM/ODM，包括 LOGO、包装、UI界面、功能模块的深度定制。' },
             ].map((faq, i) => (
               <details key={i} className="group border border-[#E5E7EB] rounded-xl p-4 hover:border-[#0066FF]/30 transition-colors">
-                <summary className="text-sm font-medium text-[#1A1A1A] cursor-pointer list-none flex justify-between items-center">
+                <summary className="text-sm font-medium text-[#111827] cursor-pointer list-none flex justify-between items-center">
                   {faq.q}
-                  <span className="text-[#5C5C5C] group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-[#374151] group-open:rotate-180 transition-transform">▼</span>
                 </summary>
-                <p className="mt-3 text-sm text-[#5C5C5C] leading-relaxed">{faq.a}</p>
+                <p className="mt-3 text-sm text-[#374151] leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
