@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 
 interface Category { id: string; name: Record<string, string>; slug: string }
 
@@ -11,9 +11,26 @@ interface ProductFormProps {
   submitLabel: string
 }
 
-const langs = [{ key: 'zh', label: '中文' }, { key: 'en', label: 'English' }, { key: 'es', label: 'Español' }]
+const langs = [
+  { key: 'zh', label: '中文' },
+  { key: 'en', label: 'English' },
+  { key: 'es', label: 'Español' },
+] as const
 
-// 图片上传组件
+type LangKey = (typeof langs)[number]['key']
+
+// ── Slug 生成工具 ──
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9一-鿿]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/[一-鿿]/g, '') // 去掉中文
+    .replace(/-+/g, '-')
+    .substring(0, 80)
+}
+
+// ── 图片上传组件 ──
 function ImageUploader({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -40,7 +57,7 @@ function ImageUploader({ label, value, onChange }: { label: string; value: strin
       <label className="block text-sm text-gray-600 mb-1">{label}</label>
       <div className="flex gap-3 items-start">
         <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
-          {value ? <img src={value.startsWith('/') ? value : `/${value}`} className="w-full h-full object-cover" /> : <span className="text-gray-400 text-2xl">📷</span>}
+          {value ? <img src={value.startsWith('/') || value.startsWith('http') ? value : `/${value}`} className="w-full h-full object-cover" /> : <span className="text-gray-400 text-2xl">📷</span>}
         </div>
         <div className="flex-1 space-y-2">
           <input value={value} onChange={e => onChange(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="/uploads/products/image.jpg 或点击下方上传" />
@@ -59,7 +76,7 @@ function ImageUploader({ label, value, onChange }: { label: string; value: strin
   )
 }
 
-// Gallery 图片上传组件
+// ── Gallery 上传 ──
 function GalleryUploader({ onAdd }: { onAdd: (url: string) => void }) {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -95,9 +112,13 @@ function GalleryUploader({ onAdd }: { onAdd: (url: string) => void }) {
   )
 }
 
+// ── 主表单组件 ──
 export default function ProductForm({ initialData, categories, onSubmit, submitLabel }: ProductFormProps) {
-  const [lang, setLang] = useState('en')
+  const [lang, setLang] = useState<LangKey>('zh')
   const [loading, setLoading] = useState(false)
+  const [translating, setTranslating] = useState(false)
+  const [slugAuto, setSlugAuto] = useState(true) // 是否自动生成 slug
+
   const [form, setForm] = useState({
     slug: (initialData?.slug as string) || '',
     sku: (initialData?.sku as string) || '',
@@ -120,10 +141,132 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
     logistics: (initialData?.logistics as Record<string, unknown>) || { moq: '', leadTime: '', warranty: '', datasheet: '' },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const update = (field: string, value: unknown) => setForm(prev => ({ ...prev, [field]: value } as any))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateLang = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: { ...(prev as any)[field] as Record<string, string>, [lang]: value } } as any))
+  const update = useCallback((field: string, value: unknown) => {
+    setForm(prev => {
+      const next = { ...prev, [field]: value } as typeof prev
+      // 自动生成 slug：当编辑 en 名称或 zh 名称且 slug 为空/自动模式
+      if (field === 'name' && slugAuto) {
+        const names = value as Record<string, string>
+        const source = names.en || names.zh || ''
+        if (source.trim()) {
+          next.slug = generateSlug(source)
+        }
+      }
+      return next
+    })
+  }, [slugAuto])
+
+  const updateLang = useCallback((field: string, value: string) => {
+    setForm(prev => {
+      const current = (prev as Record<string, unknown>)[field] as Record<string, string>
+      const next = {
+        ...prev,
+        [field]: { ...current, [lang]: value },
+      } as typeof prev
+
+      // 自动生成 slug：编辑名称时
+      if (field === 'name' && slugAuto) {
+        const source = lang === 'en' ? value : (current.en || value)
+        if (source.trim()) {
+          next.slug = generateSlug(source)
+        }
+      }
+
+      return next
+    })
+  }, [lang, slugAuto])
+
+  // ── 自动翻译 ──
+  const autoTranslate = useCallback(async () => {
+    const sourceText = (form.name as Record<string, string>).zh
+    if (!sourceText.trim()) {
+      alert('请先在中文版面填写产品名称')
+      return
+    }
+
+    setTranslating(true)
+    try {
+      const fields = ['name', 'summary']
+      const targetLangs: LangKey[] = ['en', 'es']
+
+      // 收集所有需要翻译的文本
+      const texts: { field: string; text: string }[] = []
+      for (const field of fields) {
+        const zhText = (form[field as keyof typeof form] as Record<string, string>).zh
+        if (zhText?.trim()) {
+          texts.push({ field, text: zhText })
+        }
+      }
+      // 亮点
+      form.highlights.forEach((h, i) => {
+        if (h.zh?.trim()) texts.push({ field: `highlight_${i}`, text: h.zh })
+      })
+
+      if (texts.length === 0) {
+        alert('没有可翻译的中文内容')
+        setTranslating(false)
+        return
+      }
+
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texts: texts.map(t => t.text), from: 'zh', to: ['en', 'es'] }),
+        credentials: 'include',
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: '翻译服务不可用' }))
+        throw new Error(err.error || '翻译失败')
+      }
+
+      const data = await res.json() as { translations: string[][] }
+
+      setForm(prev => {
+        const next = { ...prev }
+        const nameData = { ...(prev.name as Record<string, string>) }
+        const summaryData = { ...(prev.summary as Record<string, string>) }
+        const newHighlights = prev.highlights.map(h => ({ ...h }))
+
+        texts.forEach((item, idx) => {
+          const enText = data.translations[idx]?.[0] || ''
+          const esText = data.translations[idx]?.[1] || ''
+
+          if (item.field === 'name') {
+            nameData.en = enText || nameData.en
+            nameData.es = esText || nameData.es
+          } else if (item.field === 'summary') {
+            summaryData.en = enText || summaryData.en
+            summaryData.es = esText || summaryData.es
+          } else if (item.field.startsWith('highlight_')) {
+            const hi = parseInt(item.field.split('_')[1])
+            if (newHighlights[hi]) {
+              newHighlights[hi] = {
+                ...newHighlights[hi],
+                en: enText || newHighlights[hi].en,
+                es: esText || newHighlights[hi].es,
+              }
+            }
+          }
+        })
+
+        next.name = nameData
+        next.summary = summaryData
+        next.highlights = newHighlights
+
+        // 自动更新 slug（英文翻译优先）
+        if (slugAuto && nameData.en?.trim()) {
+          next.slug = generateSlug(nameData.en)
+        }
+
+        return next
+      })
+    } catch (e) {
+      alert((e as Error).message || '翻译失败')
+    } finally {
+      setTranslating(false)
+    }
+  }, [form, slugAuto])
 
   const addHighlight = () => setForm(prev => ({ ...prev, highlights: [...prev.highlights, { zh: '', en: '', es: '' }] }))
   const removeHighlight = (i: number) => setForm(prev => ({ ...prev, highlights: prev.highlights.filter((_, idx) => idx !== i) }))
@@ -149,24 +292,66 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Language Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-2">
-        {langs.map(l => (
-          <button key={l.key} type="button" onClick={() => setLang(l.key)}
-            className={`px-4 py-2 text-sm rounded-t-lg ${lang === l.key ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-            {l.label}
-          </button>
-        ))}
+      {/* Language Tabs + Translate Button */}
+      <div className="flex gap-2 border-b border-gray-200 pb-2 items-center justify-between">
+        <div className="flex gap-2">
+          {langs.map(l => (
+            <button key={l.key} type="button" onClick={() => setLang(l.key)}
+              className={`px-4 py-2 text-sm rounded-t-lg transition-colors ${lang === l.key ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={autoTranslate}
+          disabled={translating}
+          className="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 transition-all flex items-center gap-1.5 shadow-sm"
+          title="根据中文内容自动翻译为英文和西班牙语"
+        >
+          {translating ? (
+            <>⏳ 翻译中...</>
+          ) : (
+            <>🌐 自动翻译 (中→英+西)</>
+          )}
+        </button>
       </div>
 
       {/* Basic Info */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-semibold text-gray-800 border-b pb-2">基本信息</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-sm text-gray-600 mb-1">产品名称 ({lang})</label>
-            <input value={(form.name as Record<string, string>)[lang] || ''} onChange={e => updateLang('name', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-          <div><label className="block text-sm text-gray-600 mb-1">Slug</label>
-            <input value={form.slug} onChange={e => update('slug', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" required /></div>
+          <div className="md:col-span-2">
+            <label className="block text-sm text-gray-600 mb-1">产品名称 ({lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Español'})</label>
+            <input
+              value={(form.name as Record<string, string>)[lang] || ''}
+              onChange={e => updateLang('name', e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm"
+              placeholder={lang === 'zh' ? '输入中文产品名称，英文和西班牙语可自动翻译' : 'Product name'}
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              Slug {slugAuto && <span className="text-cyan-600">(自动)</span>}
+            </label>
+            <div className="flex gap-2">
+              <input
+                value={form.slug}
+                onChange={e => { setSlugAuto(false); update('slug', e.target.value) }}
+                className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                required
+                placeholder="auto-generated-from-name"
+              />
+              <button
+                type="button"
+                onClick={() => setSlugAuto(!slugAuto)}
+                className={`px-3 py-2 text-xs rounded-lg border transition-colors ${slugAuto ? 'bg-cyan-50 border-cyan-300 text-cyan-700' : 'bg-gray-50 border-gray-300 text-gray-600'}`}
+                title={slugAuto ? '点击手动编辑' : '点击自动生成'}
+              >
+                {slugAuto ? '自动 ✓' : '手动'}
+              </button>
+            </div>
+          </div>
           <div><label className="block text-sm text-gray-600 mb-1">SKU</label>
             <input value={form.sku} onChange={e => update('sku', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
           <div><label className="block text-sm text-gray-600 mb-1">品牌</label>
@@ -191,7 +376,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
               <option value="ACTIVE">上架</option><option value="DRAFT">草稿</option><option value="INACTIVE">下架</option>
             </select></div>
         </div>
-        <div><label className="block text-sm text-gray-600 mb-1">产品简介 ({lang})</label>
+        <div><label className="block text-sm text-gray-600 mb-1">产品简介 ({lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Español'})</label>
           <textarea value={(form.summary as Record<string, string>)[lang] || ''} onChange={e => updateLang('summary', e.target.value)} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
       </div>
 
@@ -239,7 +424,7 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
             {form.images.gallery.map((url, i) => (
               <div key={i} className="relative group border border-gray-200 rounded-lg overflow-hidden aspect-square bg-gray-50">
-                {url ? <img src={url.startsWith('/') ? url : `/${url}`} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-gray-400">📷</div>}
+                {url ? <img src={url.startsWith('/') || url.startsWith('http') ? url : `/${url}`} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-gray-400">📷</div>}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button type="button" onClick={() => {
                     const g = [...form.images.gallery]; g.splice(i, 1);
@@ -264,34 +449,34 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
           <input value={form.seoKeywords} onChange={e => update('seoKeywords', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="keyword1, keyword2" /></div>
       </div>
 
-      {/* Logistics — 物流信息，与详情页正面完全匹配 */}
+      {/* Logistics */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-semibold text-gray-800 border-b pb-2">物流信息</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-sm text-gray-600 mb-1">MOQ（多语言，如 "10 pcs" / "10 台"）({lang})</label>
+          <div><label className="block text-sm text-gray-600 mb-1">MOQ ({lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Español'})</label>
             <input value={((form.logistics as Record<string, unknown>)?.moq as Record<string, string>)?.[lang] || ''} onChange={e => {
               const cur = (form.logistics as Record<string, unknown>)?.moq as Record<string, string> || { zh: '', en: '', es: '' };
               update('logistics', { ...form.logistics, moq: { ...cur, [lang]: e.target.value } });
-            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 10 pcs / 10 台" /></div>
-          <div><label className="block text-sm text-gray-600 mb-1">交货时间（Lead Time）({lang})</label>
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="10 pcs / 10 台" /></div>
+          <div><label className="block text-sm text-gray-600 mb-1">交货时间 ({lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Español'})</label>
             <input value={((form.logistics as Record<string, unknown>)?.leadTime as Record<string, string>)?.[lang] || ''} onChange={e => {
               const cur = (form.logistics as Record<string, unknown>)?.leadTime as Record<string, string> || { zh: '', en: '', es: '' };
               update('logistics', { ...form.logistics, leadTime: { ...cur, [lang]: e.target.value } });
-            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 7-15 days / 7-15 天" /></div>
-          <div><label className="block text-sm text-gray-600 mb-1">质保（Warranty）({lang})</label>
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="7-15 days / 7-15 天" /></div>
+          <div><label className="block text-sm text-gray-600 mb-1">质保 ({lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Español'})</label>
             <input value={((form.logistics as Record<string, unknown>)?.warranty as Record<string, string>)?.[lang] || ''} onChange={e => {
               const cur = (form.logistics as Record<string, unknown>)?.warranty as Record<string, string> || { zh: '', en: '', es: '' };
               update('logistics', { ...form.logistics, warranty: { ...cur, [lang]: e.target.value } });
-            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 2 years / 2 年" /></div>
-          <div><label className="block text-sm text-gray-600 mb-1">规格书文件（Datasheet）</label>
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="2 years / 2 年" /></div>
+          <div><label className="block text-sm text-gray-600 mb-1">规格书文件</label>
             <input value={((form.logistics as Record<string, unknown>)?.datasheet as string) || ''} onChange={e => {
               update('logistics', { ...form.logistics, datasheet: e.target.value });
-            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="/downloads/Qiaoan-PTZ-Linkage.pdf" /></div>
+            }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="/downloads/product.pdf" /></div>
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button type="submit" disabled={loading} className="bg-cyan-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-cyan-700 disabled:opacity-50">
+      <div className="flex justify-end gap-3">
+        <button type="submit" disabled={loading} className="bg-cyan-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-cyan-700 disabled:opacity-50 transition-colors">
           {loading ? '保存中...' : submitLabel}
         </button>
       </div>
