@@ -129,9 +129,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               )}
 
               {/* Inquiry Button */}
-              <button className="w-full sm:w-auto px-8 py-3 bg-[#0066FF] text-white font-medium rounded-xl hover:bg-[#267FFF] transition-colors shadow-lg shadow-[#0066FF]/20">
+              <a href="https://www.ethscam.com/#contact"
+                className="inline-block w-full sm:w-auto px-8 py-3 bg-[#0066FF] text-white font-medium rounded-xl hover:bg-[#267FFF] transition-colors shadow-lg shadow-[#0066FF]/20 text-center">
                 立即询价
-              </button>
+              </a>
             </div>
           </div>
         </div>
