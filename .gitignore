@@ -50,3 +50,7 @@ next-env.d.ts
 
 .vercel
 .env*
+.playwright-cli
+.vercel-tmp
+test_img.png
+blob-store.yml
