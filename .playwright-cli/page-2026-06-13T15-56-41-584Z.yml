@@ -1,0 +1,34 @@
+- generic [ref=e1]:
+  - link "Skip to content":
+    - /url: "#geist-skip-nav"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - link "Vercel logo":
+        - /url: /home
+        - button "Vercel Logo":
+          - img "Vercel Logo"
+      - navigation:
+        - navigation
+    - main [ref=e10]:
+      - generic [ref=e12]:
+        - heading "Check your email" [level=1] [ref=e70]
+        - generic [ref=e72]:
+          - paragraph [ref=e73]: If you have a Vercel account, we sent a code to liyimo0817@gmail.com.
+          - generic [ref=e74]:
+            - generic:
+              - generic:
+                - generic: "|"
+              - textbox "Verification code sent to liyimo0817@gmail.com" [active] [ref=e75]
+          - button "Use a Different Email" [ref=e77] [cursor=pointer]:
+            - generic [ref=e78]: Use a Different Email
+      - generic [ref=e66]:
+        - link "Terms" [ref=e67] [cursor=pointer]:
+          - /url: /legal/terms
+        - link "Privacy Policy" [ref=e68] [cursor=pointer]:
+          - /url: /legal/privacy-policy
+  - alert [ref=e69]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img

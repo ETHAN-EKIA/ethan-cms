@@ -1,0 +1,374 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content":
+    - /url: "#geist-skip-nav"
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - link "liyimo0817-1103's projects Hobby" [ref=e10] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects
+              - img [ref=e11]
+              - generic [ref=e12]:
+                - generic [ref=e13]: liyimo0817-1103's projects
+                - generic [ref=e14]: Hobby
+            - button [ref=e15] [cursor=pointer]:
+              - img [ref=e17]
+          - button "Find… F" [ref=e20]:
+            - generic [ref=e22]:
+              - img [ref=e24]
+              - generic [ref=e26]: Find…
+              - generic [ref=e28]: F
+        - navigation [ref=e30]:
+          - generic [ref=e31]:
+            - generic:
+              - generic:
+                - link "Projects":
+                  - /url: /liyimo0817-1103s-projects
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Projects
+                - link "Deployments":
+                  - /url: /liyimo0817-1103s-projects/~/deployments
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Deployments
+                - link "Logs":
+                  - /url: /liyimo0817-1103s-projects/~/logs
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Logs
+                - link "Analytics":
+                  - /url: /liyimo0817-1103s-projects/~/analytics
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Analytics
+                - link "Speed Insights":
+                  - /url: /liyimo0817-1103s-projects/~/speed-insights
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Speed Insights
+                - link "Observability":
+                  - /url: /liyimo0817-1103s-projects/~/observability
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Observability
+                  - generic:
+                    - img
+                - link "Firewall":
+                  - /url: /liyimo0817-1103s-projects/~/firewall
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Firewall
+                - link "CDN":
+                  - /url: /liyimo0817-1103s-projects/~/cdn
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: CDN
+                - separator
+                - link "Environment Variables":
+                  - /url: /liyimo0817-1103s-projects/~/settings/environment-variables
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Environment Variables
+                - link "Domains":
+                  - /url: /liyimo0817-1103s-projects/~/domains
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Domains
+                - link "Connect Beta":
+                  - /url: /liyimo0817-1103s-projects/~/connect
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Connect
+                    - generic: Beta
+                - link "Integrations":
+                  - /url: /liyimo0817-1103s-projects/~/integrations
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Integrations
+                - link "Storage":
+                  - /url: /liyimo0817-1103s-projects/~/stores
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Storage
+                  - generic:
+                    - img
+                - link "Flags":
+                  - /url: /liyimo0817-1103s-projects/~/experimentation/collections
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Flags
+                - link "Agent":
+                  - /url: /liyimo0817-1103s-projects/~/agent
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Agent
+                  - generic:
+                    - img
+                - link "AI Gateway":
+                  - /url: /liyimo0817-1103s-projects/~/ai-gateway
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: AI Gateway
+                  - generic:
+                    - img
+                - link "Sandboxes":
+                  - /url: /liyimo0817-1103s-projects/~/sandboxes
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Sandboxes
+                  - generic:
+                    - img
+                - link "Workflows":
+                  - /url: /liyimo0817-1103s-projects/~/workflows
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Workflows
+                - separator
+                - link "Usage":
+                  - /url: /liyimo0817-1103s-projects/~/usage
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Usage
+                - link "Support":
+                  - /url: /liyimo0817-1103s-projects/~/support
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Support
+                - link "Settings":
+                  - /url: /liyimo0817-1103s-projects/~/settings
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Settings
+                  - generic:
+                    - img
+            - generic [ref=e32]:
+              - button "Storage" [ref=e34] [cursor=pointer]:
+                - img [ref=e36]
+                - generic [ref=e38]: Storage
+              - generic [ref=e41]:
+                - link "Getting Started" [ref=e42] [cursor=pointer]:
+                  - /url: /liyimo0817-1103s-projects/~/stores/blob/store_28IMAJr8yCvISY59/guides
+                  - img [ref=e44]
+                  - generic [ref=e47]: Getting Started
+                - link "Projects" [ref=e48] [cursor=pointer]:
+                  - /url: /liyimo0817-1103s-projects/~/stores/blob/store_28IMAJr8yCvISY59/projects
+                  - img [ref=e50]
+                  - generic [ref=e53]: Projects
+                - link "Settings" [ref=e54] [cursor=pointer]:
+                  - /url: /liyimo0817-1103s-projects/~/stores/blob/store_28IMAJr8yCvISY59/settings
+                  - img [ref=e56]
+                  - generic [ref=e59]: Settings
+                - generic [ref=e60]:
+                  - generic [ref=e61]: Database
+                  - link "Browser" [ref=e62] [cursor=pointer]:
+                    - /url: /liyimo0817-1103s-projects/~/stores/blob/store_28IMAJr8yCvISY59/browser
+                    - img [ref=e64]
+                    - generic [ref=e67]: Browser
+                - generic [ref=e68]:
+                  - generic [ref=e69]: Resources
+                  - link "Documentation" [ref=e70] [cursor=pointer]:
+                    - /url: /docs/storage/vercel-blob
+                    - img [ref=e72]
+                    - generic [ref=e74]:
+                      - generic [ref=e75]: Documentation
+                      - img [ref=e76]
+                  - link "@vercel/blob" [ref=e78] [cursor=pointer]:
+                    - /url: https://github.com/vercel/storage/tree/main/packages/blob#readme
+                    - img [ref=e80]
+                    - generic [ref=e83]:
+                      - generic [ref=e84]: "@vercel/blob"
+                      - img [ref=e85]
+        - generic [ref=e91]:
+          - button "Avatar for liyimo0817-1103 liyimo0817-1103" [ref=e92] [cursor=pointer]:
+            - img "Avatar for liyimo0817-1103" [ref=e93]:
+              - img "Avatar for liyimo0817-1103" [ref=e94]
+            - generic [ref=e96]: liyimo0817-1103
+            - img [ref=e98]
+          - button "notifications" [ref=e102] [cursor=pointer]:
+            - generic [ref=e104]:
+              - img
+      - button [ref=e106] [cursor=pointer]:
+        - img [ref=e107]
+    - generic [ref=e110]:
+      - generic [ref=e111]:
+        - button "All projects" [ref=e115] [cursor=pointer]:
+          - generic [ref=e116]: All projects
+          - img [ref=e118]
+        - generic [ref=e122]: Storage
+      - generic [ref=e126]:
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]:
+                - generic [ref=e131]:
+                  - img [ref=e133]
+                  - heading "ethan-cms-blob" [level=1] [ref=e136]
+                  - generic [ref=e139]: Public
+                - generic [ref=e140]:
+                  - link "All Databases" [ref=e141] [cursor=pointer]:
+                    - /url: /liyimo0817-1103s-projects/~/stores
+                    - img [ref=e142]
+                    - paragraph [ref=e144]: All Databases
+                  - img [ref=e145]
+                  - paragraph [ref=e148]: Blob Store
+              - generic [ref=e149]:
+                - link "Open in Observability" [ref=e150] [cursor=pointer]:
+                  - /url: /liyimo0817-1103s-projects/~/observability/blob/store_28IMAJr8yCvISY59
+                  - generic [ref=e151]:
+                    - img [ref=e152]
+                    - generic [ref=e157]: Open in Observability
+                - button "Connect to Project" [ref=e158] [cursor=pointer]:
+                  - generic [ref=e159]: Connect to Project
+            - separator [ref=e160]
+          - generic [ref=e161]:
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - paragraph [ref=e164]: Region
+                - generic [ref=e166]: IAD1
+              - generic [ref=e167]:
+                - paragraph [ref=e168]: Created
+                - paragraph [ref=e169]: 18m ago
+              - generic [ref=e171]:
+                - paragraph [ref=e173]: Storage
+                - paragraph [ref=e175]: 0 B
+              - paragraph [ref=e178]: Storage (average)
+              - paragraph [ref=e182]: Simple Operations
+              - paragraph [ref=e186]: Advanced Operations
+              - paragraph [ref=e190]: Data Transfer
+            - generic [ref=e192]:
+              - paragraph [ref=e194]: Quickstart
+              - generic [ref=e195]:
+                - generic [ref=e196]:
+                  - generic [ref=e197]:
+                    - button "@vercel/blob" [ref=e198] [cursor=pointer]:
+                      - paragraph [ref=e201]: "@vercel/blob"
+                    - button ".env.local" [ref=e202] [cursor=pointer]:
+                      - paragraph [ref=e205]: .env.local
+                  - button "Copy Snippet" [ref=e207] [cursor=pointer]:
+                    - generic [ref=e209]:
+                      - paragraph [ref=e210]: Copy Snippet
+                      - img [ref=e212]
+                - code [ref=e217]:
+                  - generic [ref=e218]:
+                    - generic [ref=e219]: "1"
+                    - generic [ref=e220]: "import { put } from \"@vercel/blob\";"
+                  - generic [ref=e222]: "2"
+                  - generic [ref=e224]:
+                    - generic [ref=e225]: "3"
+                    - generic [ref=e226]: "const { url } = await put('articles/blob.txt', 'Hello World!', { access: 'public' });"
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - heading "Settings" [level=2] [ref=e231]
+            - paragraph [ref=e232]: Edit the settings for this store.
+          - generic [ref=e233]:
+            - generic [ref=e235]:
+              - heading "Store Name" [level=4] [ref=e236]
+              - textbox "store name" [ref=e238]:
+                - /placeholder: Store name
+                - text: ethan-cms-blob
+            - generic [ref=e239]:
+              - paragraph [ref=e241]: Use up to 32 characters.
+              - button "Save" [disabled] [ref=e244]:
+                - generic [ref=e245]: Save
+          - generic [ref=e247]:
+            - heading "Store Information" [level=4] [ref=e248]
+            - generic [ref=e249]:
+              - generic [ref=e250]:
+                - text: Unique Store ID
+                - generic [ref=e251]:
+                  - generic [ref=e252]: store_28IMAJr8yCvISY59
+                  - button "Copy to clipboard" [ref=e254] [cursor=pointer]:
+                    - generic [ref=e256]:
+                      - img [ref=e258]
+                      - img [ref=e261]
+              - generic [ref=e263]:
+                - text: Storage Region
+                - generic [ref=e264]:
+                  - generic [ref=e266]:
+                    - paragraph [ref=e267]: Washington, D.C., USA
+                    - generic [ref=e268]: IAD1
+                  - button "Copy to clipboard" [ref=e270] [cursor=pointer]:
+                    - generic [ref=e272]:
+                      - img [ref=e274]
+                      - img [ref=e277]
+          - generic [ref=e280]:
+            - generic [ref=e281]:
+              - heading "Store Access" [level=4] [ref=e282]
+              - generic [ref=e283]: Public
+            - generic [ref=e284]: This is a public store. Blobs uploaded here are publicly accessible via their URL. Use this for assets like images and documents. The access mode cannot be changed after creation.
+            - generic [ref=e285]:
+              - text: Base URL
+              - generic [ref=e286]:
+                - generic [ref=e287]: https://28imajr8ycvisy59.public.blob.vercel-storage.com
+                - button "Copy to clipboard" [ref=e289] [cursor=pointer]:
+                  - generic [ref=e291]:
+                    - img [ref=e293]
+                    - img [ref=e296]
+            - paragraph [ref=e298]:
+              - link "Learn more about public blob storage" [ref=e299] [cursor=pointer]:
+                - /url: /docs/vercel-blob/public-storage
+          - generic [ref=e300]:
+            - generic [ref=e301]:
+              - heading "Transfer Store" [level=4] [ref=e302]
+              - paragraph [ref=e303]:
+                - generic [ref=e304]:
+                  - generic [ref=e305]: Transfer this store to another team without downtime or workflow interruptions.
+                  - generic [ref=e306]:
+                    - strong [ref=e307]: "Note:"
+                    - text: Any existing Project connections will be removed, but Projects will continue to use the existing Environment Variables, with any Deployments continuing to have access to the store. Connections will be re-established if the Projects are also transferred.
+            - generic [ref=e308]:
+              - generic:
+                - paragraph
+              - button "Transfer Store" [ref=e311] [cursor=pointer]:
+                - generic [ref=e312]: Transfer Store
+          - generic [ref=e313]:
+            - generic [ref=e314]:
+              - heading "Rotate Credentials" [level=4] [ref=e315]
+              - paragraph [ref=e316]:
+                - generic [ref=e317]:
+                  - paragraph [ref=e318]: Generate new credentials for this Blob Store.
+                  - paragraph [ref=e319]:
+                    - strong [ref=e320]: "Note:"
+                    - text: You can optionally delay expiration of old credentials (up to 30 days), allowing zero-downtime rotation. The Environment Variables on connected projects will be updated with new credentials. Active deployments will need to be redeployed to use the new credentials.
+                  - paragraph [ref=e321]: This cannot be undone.
+            - generic [ref=e322]:
+              - generic:
+                - paragraph
+              - button "Rotate Credentials" [ref=e325] [cursor=pointer]:
+                - generic [ref=e326]: Rotate Credentials
+          - generic [ref=e327]:
+            - generic [ref=e328]:
+              - heading "Delete Store" [level=4] [ref=e329]
+              - paragraph [ref=e330]:
+                - paragraph [ref=e331]: Permanently delete this Blob and everything in it. This cannot be undone.
+            - button "Delete Store" [disabled] [ref=e335]:
+              - generic [ref=e336]: Delete Store
+  - alert [ref=e337]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img

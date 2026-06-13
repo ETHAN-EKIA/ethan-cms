@@ -1,0 +1,106 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content":
+    - /url: "#geist-skip-nav"
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - button [disabled] [ref=e13] [cursor=pointer]:
+            - img [ref=e15]
+          - button "Find… F" [ref=e18]:
+            - generic [ref=e20]:
+              - img [ref=e22]
+              - generic [ref=e24]: Find…
+              - generic [ref=e26]: F
+        - navigation [ref=e28]:
+          - generic [ref=e31]:
+            - link "Overview" [ref=e32] [cursor=pointer]:
+              - /url: "#intent:sidebar:projects"
+              - img [ref=e34]
+              - generic [ref=e37]: Overview
+            - link "Deployments" [ref=e38] [cursor=pointer]:
+              - /url: "#intent:sidebar:deployments"
+              - img [ref=e40]
+              - generic [ref=e43]: Deployments
+            - link "Logs" [ref=e44] [cursor=pointer]:
+              - /url: "#intent:sidebar:logs"
+              - img [ref=e46]
+              - generic [ref=e49]: Logs
+            - link "Analytics" [ref=e50] [cursor=pointer]:
+              - /url: "#intent:sidebar:analytics"
+              - img [ref=e52]
+              - generic [ref=e55]: Analytics
+            - link "Speed Insights" [ref=e56] [cursor=pointer]:
+              - /url: "#intent:sidebar:speed-insights"
+              - img [ref=e58]
+              - generic [ref=e61]: Speed Insights
+            - link "Observability" [ref=e62] [cursor=pointer]:
+              - /url: "#intent:sidebar:observability"
+              - img [ref=e64]
+              - generic [ref=e67]: Observability
+              - img [ref=e69]
+            - link "Firewall" [ref=e71] [cursor=pointer]:
+              - /url: "#intent:sidebar:firewall"
+              - img [ref=e73]
+              - generic [ref=e77]: Firewall
+            - link "CDN" [ref=e78] [cursor=pointer]:
+              - /url: "#intent:sidebar:cdn"
+              - img [ref=e80]
+              - generic [ref=e83]: CDN
+            - separator [ref=e84]
+            - link "Environment Variables" [ref=e85] [cursor=pointer]:
+              - /url: "#intent:sidebar:environment-variables"
+              - img [ref=e87]
+              - generic [ref=e90]: Environment Variables
+            - link "Domains" [ref=e91] [cursor=pointer]:
+              - /url: "#intent:sidebar:domains"
+              - img [ref=e93]
+              - generic [ref=e96]: Domains
+            - link "Integrations" [ref=e97] [cursor=pointer]:
+              - /url: "#intent:sidebar:integrations"
+              - img [ref=e99]
+              - generic [ref=e102]: Integrations
+            - link "Storage" [ref=e103] [cursor=pointer]:
+              - /url: "#intent:sidebar:storage"
+              - img [ref=e105]
+              - generic [ref=e108]: Storage
+            - link "Flags" [ref=e109] [cursor=pointer]:
+              - /url: "#intent:sidebar:flags"
+              - img [ref=e111]
+              - generic [ref=e114]: Flags
+            - link "Agent" [ref=e115] [cursor=pointer]:
+              - /url: "#intent:sidebar:agent"
+              - img [ref=e117]
+              - generic [ref=e120]: Agent
+              - img [ref=e122]
+            - link "AI Gateway" [ref=e124] [cursor=pointer]:
+              - /url: "#intent:sidebar:ai-gateway"
+              - img [ref=e126]
+              - generic [ref=e129]: AI Gateway
+              - img [ref=e131]
+            - link "Sandboxes" [ref=e133] [cursor=pointer]:
+              - /url: "#intent:sidebar:sandboxes"
+              - img [ref=e135]
+              - generic [ref=e138]: Sandboxes
+              - img [ref=e140]
+            - link "Workflows" [ref=e142] [cursor=pointer]:
+              - /url: "#intent:sidebar:workflows"
+              - img [ref=e144]
+              - generic [ref=e147]: Workflows
+            - separator [ref=e148]
+            - link "Usage" [ref=e149] [cursor=pointer]:
+              - /url: "#intent:sidebar:usage"
+              - img [ref=e151]
+              - generic [ref=e154]: Usage
+            - link "Support" [ref=e155] [cursor=pointer]:
+              - /url: "#intent:sidebar:support"
+              - img [ref=e157]
+              - generic [ref=e160]: Support
+            - link "Settings" [ref=e161] [cursor=pointer]:
+              - /url: "#intent:sidebar:settings"
+              - img [ref=e163]
+              - generic [ref=e166]: Settings
+              - img [ref=e168]
+      - button [ref=e180] [cursor=pointer]:
+        - img [ref=e181]
+  - alert [ref=e197]

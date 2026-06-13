@@ -21,11 +21,11 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path: segments } = await params;
-  const urlPath = `/${segments.join('/')}`;
+  const urlPath = `/api/images/${segments.join('/')}`;
 
   try {
     const media = await prisma.media.findFirst({
-      where: { url: { startsWith: urlPath } },
+      where: { url: urlPath },
       orderBy: { createdAt: 'desc' },
     });
 

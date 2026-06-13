@@ -85,7 +85,8 @@ export function resolveImageUrls(
   }
 
   // 处理其他常见图片字段
-  for (const field of ['image', 'coverImage', 'avatar', 'icon']) {
+  // 注意：icon 是短文本徽章标识符（如 "IF", "RC"），不是图片路径，不要解析
+  for (const field of ['image', 'coverImage', 'avatar']) {
     if (typeof result[field] === 'string') {
       result[field] = resolveUrl(result[field], cmsOrigin)
     }

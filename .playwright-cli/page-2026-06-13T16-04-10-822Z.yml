@@ -1,0 +1,199 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content":
+    - /url: "#geist-skip-nav"
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - link "liyimo0817-1103's projects Hobby" [ref=e10] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects
+              - img [ref=e11]
+              - generic [ref=e12]:
+                - generic [ref=e13]: liyimo0817-1103's projects
+                - generic [ref=e14]: Hobby
+            - button [ref=e15] [cursor=pointer]:
+              - img [ref=e17]
+          - button "Find… F" [ref=e20]:
+            - generic [ref=e22]:
+              - img [ref=e24]
+              - generic [ref=e26]: Find…
+              - generic [ref=e28]: F
+        - navigation [ref=e30]:
+          - generic [ref=e33]:
+            - link "Projects" [ref=e34] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects
+              - img [ref=e36]
+              - generic [ref=e39]: Projects
+            - link "Deployments" [ref=e40] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/deployments
+              - img [ref=e42]
+              - generic [ref=e45]: Deployments
+            - link "Logs" [ref=e46] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/logs
+              - img [ref=e48]
+              - generic [ref=e51]: Logs
+            - link "Analytics" [ref=e52] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/analytics
+              - img [ref=e54]
+              - generic [ref=e57]: Analytics
+            - link "Speed Insights" [ref=e58] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/speed-insights
+              - img [ref=e60]
+              - generic [ref=e63]: Speed Insights
+            - link "Observability" [ref=e64] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/observability
+              - img [ref=e66]
+              - generic [ref=e69]: Observability
+              - img [ref=e71]
+            - link "Firewall" [ref=e73] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/firewall
+              - img [ref=e75]
+              - generic [ref=e79]: Firewall
+            - link "CDN" [ref=e80] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/cdn
+              - img [ref=e82]
+              - generic [ref=e85]: CDN
+            - separator [ref=e86]
+            - link "Environment Variables" [ref=e87] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/settings/environment-variables
+              - img [ref=e89]
+              - generic [ref=e92]: Environment Variables
+            - link "Domains" [ref=e93] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/domains
+              - img [ref=e95]
+              - generic [ref=e98]: Domains
+            - link "Connect Beta" [ref=e99] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/connect
+              - img [ref=e101]
+              - generic [ref=e103]:
+                - generic [ref=e104]: Connect
+                - generic [ref=e105]: Beta
+            - link "Integrations" [ref=e106] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/integrations
+              - img [ref=e108]
+              - generic [ref=e111]: Integrations
+            - link "Storage" [ref=e112] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/stores
+              - img [ref=e114]
+              - generic [ref=e117]: Storage
+            - link "Flags" [ref=e118] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/experimentation/collections
+              - img [ref=e120]
+              - generic [ref=e123]: Flags
+            - link "Agent" [ref=e124] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/agent
+              - img [ref=e126]
+              - generic [ref=e129]: Agent
+              - img [ref=e131]
+            - link "AI Gateway" [ref=e133] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/ai-gateway
+              - img [ref=e135]
+              - generic [ref=e138]: AI Gateway
+              - img [ref=e140]
+            - link "Sandboxes" [ref=e142] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/sandboxes
+              - img [ref=e144]
+              - generic [ref=e147]: Sandboxes
+              - img [ref=e149]
+            - link "Workflows" [ref=e151] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/workflows
+              - img [ref=e153]
+              - generic [ref=e156]: Workflows
+            - separator [ref=e157]
+            - link "Usage" [ref=e158] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/usage
+              - img [ref=e160]
+              - generic [ref=e163]: Usage
+            - link "Support" [ref=e164] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/support
+              - img [ref=e166]
+              - generic [ref=e169]: Support
+            - link "Settings" [ref=e170] [cursor=pointer]:
+              - /url: /liyimo0817-1103s-projects/~/settings
+              - img [ref=e172]
+              - generic [ref=e175]: Settings
+              - img [ref=e177]
+        - generic [ref=e183]:
+          - button "Avatar for liyimo0817-1103 liyimo0817-1103" [ref=e184] [cursor=pointer]:
+            - img "Avatar for liyimo0817-1103" [ref=e185]:
+              - img "Avatar for liyimo0817-1103" [ref=e186]
+            - generic [ref=e188]: liyimo0817-1103
+            - img [ref=e190]
+          - img [ref=e194]
+      - button [ref=e197] [cursor=pointer]:
+        - img [ref=e198]
+    - generic [ref=e201]:
+      - generic [ref=e202]:
+        - button "All projects" [ref=e206] [cursor=pointer]:
+          - generic [ref=e207]: All projects
+          - img [ref=e209]
+        - generic [ref=e213]: Environment Variables
+      - generic [ref=e220]:
+        - generic [ref=e221]:
+          - heading "Environment Variables" [level=1] [ref=e223]
+          - paragraph [ref=e224]:
+            - text: Environment Variables added to the Team can be used by all, or a subset of, your Projects.
+            - link "Learn more" [ref=e225] [cursor=pointer]:
+              - /url: /docs/environment-variables/shared-environment-variables
+              - text: Learn more
+              - img [ref=e226]
+        - tablist [ref=e229]:
+          - tab "Projects" [selected] [ref=e230] [cursor=pointer]
+          - tab "Shared" [ref=e231] [cursor=pointer]
+        - generic [ref=e232]:
+          - generic [ref=e233]:
+            - generic [ref=e235]:
+              - searchbox "Search" [disabled] [ref=e236]
+              - img [ref=e238]
+            - combobox [ref=e241]
+            - generic [ref=e244]:
+              - generic [ref=e246]:
+                - combobox "Filter variables by status" [disabled] [ref=e247]:
+                  - option "All Variables" [selected]
+                  - option "Needs Attention"
+                - generic:
+                  - img
+              - generic [ref=e249]:
+                - generic:
+                  - img
+                - combobox [disabled] [ref=e250]:
+                  - option "Sort by…" [disabled]
+                  - option "Last Updated" [selected]
+                  - option "Name"
+                  - option "Type"
+                - generic:
+                  - img
+          - table [ref=e257]:
+            - rowgroup [ref=e262]
+            - rowgroup [ref=e263]:
+              - row [ref=e264]:
+                - cell [ref=e265]
+                - cell [ref=e267]
+                - cell [ref=e269]
+              - row [ref=e271]:
+                - cell [ref=e272]
+                - cell [ref=e274]
+                - cell [ref=e276]
+              - row [ref=e278]:
+                - cell [ref=e279]
+                - cell [ref=e281]
+                - cell [ref=e283]
+              - row [ref=e285]:
+                - cell [ref=e286]
+                - cell [ref=e288]
+                - cell [ref=e290]
+              - row [ref=e292]:
+                - cell [ref=e293]
+                - cell [ref=e295]
+                - cell [ref=e297]
+              - row [ref=e299]:
+                - cell [ref=e300]
+                - cell [ref=e302]
+                - cell [ref=e304]
+  - alert [ref=e308]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img
