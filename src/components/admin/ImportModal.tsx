@@ -10,7 +10,7 @@ const FIELD_MAP: Record<string, string> = {
   'Nombre': 'name.es', '产品名称(西)': 'name.es',
   'Slug': 'slug', 'slug': 'slug',
   'SKU': 'sku', 'sku': 'sku', '型号': 'sku',
-  '品牌': 'brand', 'Brand': 'brand', 'brand': 'brand', 'Brand': 'brand',
+  '品牌': 'brand', 'Brand': 'brand', 'brand': 'brand',
   '分类': 'categoryId', 'Category': 'categoryId',
   '价格': 'price', 'Price': 'price', 'price': 'price', '单价': 'price',
   '库存': 'stock', 'Stock': 'stock', 'stock': 'stock',
