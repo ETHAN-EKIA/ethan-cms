@@ -1,11 +1,80 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client'
 
 interface Blog { id: string; title: Record<string, string>; slug: string; status: string; coverImage: string; createdAt: string; author?: { displayName: string } }
 interface BlogList { data: Blog[]; total: number; page: number; totalPages: number }
 const langs = ['zh', 'en', 'es']
+
+// ── 封面图片上传组件 ──
+function CoverUploader({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('folder', 'blogs')
+      const r = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '上传失败')
+      onChange(d.url)
+    } catch (e) {
+      alert((e as Error).message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="flex gap-3 items-start">
+      {/* 预览 */}
+      <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+        {value ? (
+          <img src={value.startsWith('/') || value.startsWith('http') ? value : `/${value}`} className="w-full h-full object-cover" alt="封面预览" />
+        ) : (
+          <span className="text-gray-400 text-2xl">🖼️</span>
+        )}
+      </div>
+      <div className="flex-1 space-y-2">
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="粘贴图片URL或点击上传"
+          className="w-full px-3 py-2 border rounded-lg text-sm"
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="px-3 py-1.5 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700 disabled:opacity-50 transition-colors"
+          >
+            {uploading ? '⏳ 上传中...' : '📤 上传图片'}
+          </button>
+          {value && (
+            <button type="button" onClick={() => onChange('')} className="px-3 py-1.5 bg-gray-200 rounded-lg text-sm hover:bg-gray-300 transition-colors">
+              清除
+            </button>
+          )}
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => {
+            if (e.target.files?.[0]) handleUpload(e.target.files[0])
+            e.target.value = ''
+          }}
+        />
+      </div>
+    </div>
+  )
+}
 
 export default function BlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([])
@@ -55,8 +124,8 @@ export default function BlogsPage() {
                 <option value="DRAFT">草稿</option><option value="PUBLISHED">发布</option><option value="ARCHIVED">归档</option></select></div>
             <div className="col-span-2"><label className="block text-sm text-gray-600 mb-1">内容 ({lang})</label>
               <textarea value={form.content[lang] || ''} onChange={e => setForm({ ...form, content: { ...form.content, [lang]: e.target.value } })} rows={6} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-sm text-gray-600 mb-1">封面图片</label>
-              <input value={form.coverImage} onChange={e => setForm({ ...form, coverImage: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+            <div className="col-span-2"><label className="block text-sm text-gray-600 mb-1">封面图片</label>
+              <CoverUploader value={form.coverImage} onChange={url => setForm({ ...form, coverImage: url })} /></div>
             <div><label className="block text-sm text-gray-600 mb-1">SEO 标题</label>
               <input value={form.seoTitle} onChange={e => setForm({ ...form, seoTitle: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
           </div>
