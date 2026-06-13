@@ -90,8 +90,8 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
     const dtMap: Record<number, [Record<string,string>, Record<string,string>]> = {}
 
     for (const [col, field] of Object.entries(mapping)) {
-      let val = row[col] ?? ''
-      if (typeof val !== 'string') val = String(val)
+      const raw = row[col]
+      const val: string = typeof raw === 'string' ? raw : (raw !== undefined && raw !== null ? String(raw) : '')
 
       if (field.startsWith('highlights.')) {
         const [, idx, lang] = field.split('.')
