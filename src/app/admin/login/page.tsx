@@ -35,7 +35,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">ETHAN</h1>
+          <div className="flex items-center justify-center gap-2.5 mb-2">
+            <span style={{width:40,height:40,lineHeight:'40px',borderRadius:'50%',background:'#0066FF',color:'#fff',display:'inline-block',textAlign:'center',fontWeight:800,fontSize:22,fontFamily:"'Barlow Condensed',sans-serif"}}>E</span>
+            <h1 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:800,textTransform:'uppercase',letterSpacing:'-0.5px',color:'#0f172a'}}>ETHAN</h1>
+          </div>
           <p className="text-cyan-600 font-medium mt-1">Security Camera CMS</p>
         </div>
 

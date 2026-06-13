@@ -19,7 +19,7 @@ export const PUT = withAuth(async (req: NextRequest, { params }) => {
       return NextResponse.json({ error: '无效的状态值' }, { status: 400 })
     }
 
-    const allowedFields = ['title', 'slug', 'content', 'excerpt', 'coverImage', 'authorId', 'status', 'seoTitle', 'seoDesc']
+    const allowedFields = ['title', 'slug', 'content', 'excerpt', 'coverImage', 'images', 'authorId', 'status', 'seoTitle', 'seoDesc']
     const sanitized: Record<string, unknown> = {}
     for (const key of allowedFields) {
       if (data[key] !== undefined) sanitized[key] = data[key]

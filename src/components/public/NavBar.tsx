@@ -22,9 +22,10 @@ export default function NavBar() {
   return (
     <nav className="sticky top-0 z-50 bg-[#F8F8F8] border-b border-[#E5E7EB]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/products" className="flex items-center gap-2 text-[#000000] hover:text-[#0066FF] transition-colors">
-          <span className="text-lg font-bold tracking-tight">ETHAN</span>
-          <span className="hidden sm:inline text-xs text-[#6B7280] font-normal">Security Camera</span>
+        <Link href="/products" className="flex items-center gap-2.5 text-[#000000] hover:text-[#0066FF] transition-colors">
+          <span style={{width:34,height:34,lineHeight:'34px',borderRadius:'50%',background:'#0066FF',color:'#fff',display:'inline-block',textAlign:'center',fontWeight:800,fontSize:18,fontFamily:"'Barlow Condensed',sans-serif"}}>E</span>
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,fontWeight:800,textTransform:'uppercase',letterSpacing:'-0.5px'}}>ETHAN</span>
+          <span className="hidden sm:inline text-xs text-[#6B7280] font-normal ml-1">Security Camera</span>
         </Link>
 
         <div className="flex items-center gap-3 text-sm">

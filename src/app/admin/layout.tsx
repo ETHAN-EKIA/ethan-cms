@@ -78,8 +78,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-slate-900 text-white flex flex-col transition-all duration-200 flex-shrink-0`}>
         <div className="h-16 flex items-center px-4 border-b border-slate-700">
-          <span className="text-xl font-bold text-cyan-400">ETHAN</span>
-          {sidebarOpen && <span className="ml-2 text-sm text-slate-400">CMS</span>}
+          <div className="flex items-center gap-2.5">
+            <span style={{width:34,height:34,lineHeight:'34px',borderRadius:'50%',background:'#0066FF',color:'#fff',display:'inline-block',textAlign:'center',fontWeight:800,fontSize:18,fontFamily:"'Barlow Condensed',sans-serif"}}>E</span>
+            {sidebarOpen && <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,fontWeight:800,textTransform:'uppercase',letterSpacing:'-0.5px',color:'#fff'}}>ETHAN</span>}
+            {sidebarOpen && <span className="ml-2 text-sm text-slate-400">CMS</span>}
+          </div>
         </div>
         <nav className="flex-1 overflow-y-auto py-2">
           {menuItems.map(item => (

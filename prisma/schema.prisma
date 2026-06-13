@@ -188,6 +188,7 @@ model Blog {
   content   Json?      // { zh, en, es } - HTML content
   excerpt   Json?      // { zh, en, es }
   coverImage String?
+  images    Json?      // { gallery: string[] }
   authorId  String?
   author    User?      @relation(fields: [authorId], references: [id])
   status    BlogStatus @default(DRAFT)
