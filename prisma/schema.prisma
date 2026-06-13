@@ -177,6 +177,7 @@ model Media {
   size      Int      @default(0)
   folder    String?
   alt       String?
+  data      Bytes?   // 图片二进制数据 (MySQL MEDIUMBLOB)
   createdAt DateTime @default(now())
 }
 
