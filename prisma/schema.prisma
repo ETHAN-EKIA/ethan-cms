@@ -192,8 +192,8 @@ model Blog {
   authorId  String?
   author    User?      @relation(fields: [authorId], references: [id])
   status    BlogStatus @default(DRAFT)
-  seoTitle  String?    @db.Text
-  seoDesc   String?    @db.Text
+  seoTitle  Json?      // { zh, en, es }
+  seoDesc   Json?      // { zh, en, es }
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 }

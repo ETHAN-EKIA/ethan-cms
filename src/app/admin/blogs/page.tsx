@@ -116,8 +116,11 @@ export default function BlogsPage() {
     title: { zh: '', en: '', es: '' } as Record<string, string>,
     excerpt: { zh: '', en: '', es: '' } as Record<string, string>,
     content: { zh: '', en: '', es: '' } as Record<string, string>,
-    seoTitle: '', seoDesc: '',
+    seoTitle: { zh: '', en: '', es: '' } as Record<string, string>,
+    seoDesc: { zh: '', en: '', es: '' } as Record<string, string>,
   })
+
+  const SEO_MAX = { title: 120, desc: 300 }
 
   const totalPages = Math.ceil(total / 20)
 
@@ -126,12 +129,12 @@ export default function BlogsPage() {
 
   const openNew = () => {
     setEditId(null); setSlugManuallyEdited(false); setTranslateStatus('')
-    setForm({ slug: '', status: 'DRAFT', coverImage: '', images: [], title: { zh: '', en: '', es: '' }, excerpt: { zh: '', en: '', es: '' }, content: { zh: '', en: '', es: '' }, seoTitle: '', seoDesc: '' })
+    setForm({ slug: '', status: 'DRAFT', coverImage: '', images: [], title: { zh: '', en: '', es: '' }, excerpt: { zh: '', en: '', es: '' }, content: { zh: '', en: '', es: '' }, seoTitle: { zh: '', en: '', es: '' }, seoDesc: { zh: '', en: '', es: '' } })
     setShowForm(true)
   }
 
   const openEdit = (b: Blog) => {
-    apiGet<Blog & { excerpt: Record<string, string>; content: Record<string, string>; images?: { gallery: string[] }; seoTitle: string; seoDesc: string }>(`/blogs/${b.id}`).then(full => {
+    apiGet<Blog & { excerpt: Record<string, string>; content: Record<string, string>; images?: { gallery: string[] }; seoTitle: Record<string, string>; seoDesc: Record<string, string> }>(`/blogs/${b.id}`).then(full => {
       setEditId(b.id); setSlugManuallyEdited(true); setTranslateStatus('')
       const gallery = full.images?.gallery || []
       setForm({
@@ -139,7 +142,8 @@ export default function BlogsPage() {
         title: (full.title || { zh: '', en: '', es: '' }) as Record<string, string>,
         excerpt: (full.excerpt || { zh: '', en: '', es: '' }) as Record<string, string>,
         content: (full.content || { zh: '', en: '', es: '' }) as Record<string, string>,
-        seoTitle: full.seoTitle || '', seoDesc: full.seoDesc || '',
+        seoTitle: (full.seoTitle || { zh: '', en: '', es: '' }) as Record<string, string>,
+        seoDesc: (full.seoDesc || { zh: '', en: '', es: '' }) as Record<string, string>,
       })
       setShowForm(true)
     }).catch(() => {})
@@ -167,21 +171,24 @@ export default function BlogsPage() {
   }
 
   // ── 判断文本是否需要翻译 ──
-  const needsTranslation = useCallback((t: Record<string, string>, e: Record<string, string>, c: Record<string, string>): boolean => {
-    const hasZh = t.zh?.trim() || e.zh?.trim() || c.zh?.trim()
-    const hasEn = t.en?.trim() || e.en?.trim() || c.en?.trim()
-    const hasEs = t.es?.trim() || e.es?.trim() || c.es?.trim()
+  const needsTranslation = useCallback((t: Record<string, string>, e: Record<string, string>, c: Record<string, string>, s: Record<string, string>, d: Record<string, string>): boolean => {
+    const hasZh = t.zh?.trim() || e.zh?.trim() || c.zh?.trim() || s.zh?.trim() || d.zh?.trim()
+    const hasEn = t.en?.trim() || e.en?.trim() || c.en?.trim() || s.en?.trim() || d.en?.trim()
+    const hasEs = t.es?.trim() || e.es?.trim() || c.es?.trim() || s.es?.trim() || d.es?.trim()
     return !!hasZh && (!hasEn || !hasEs)
   }, [])
 
   // ── 自动翻译 ──
   const autoTranslateAll = useCallback(async (currentForm: typeof form) => {
     const td = currentForm.title; const ed = currentForm.excerpt; const cd = currentForm.content
+    const sd = currentForm.seoTitle; const dd = currentForm.seoDesc
 
     const tasks: { text: string; key: string }[] = []
     if (td.zh?.trim()) tasks.push({ text: td.zh, key: 'title' })
     if (ed.zh?.trim()) tasks.push({ text: ed.zh, key: 'excerpt' })
     if (cd.zh?.trim()) tasks.push({ text: cd.zh, key: 'content' })
+    if (sd.zh?.trim()) tasks.push({ text: sd.zh, key: 'seoTitle' })
+    if (dd.zh?.trim()) tasks.push({ text: dd.zh, key: 'seoDesc' })
 
     if (tasks.length === 0) return currentForm
 
@@ -193,6 +200,7 @@ export default function BlogsPage() {
 
       const next = { ...currentForm }
       const nt = { ...td }; const ne = { ...ed }; const nc = { ...cd }
+      const ns = { ...sd }; const nd = { ...dd }
 
       tasks.forEach((task, idx) => {
         const enT = data.translations[idx]?.[0] || task.text
@@ -200,9 +208,12 @@ export default function BlogsPage() {
         if (task.key === 'title') { if (!nt.en?.trim()) nt.en = enT; if (!nt.es?.trim()) nt.es = esT }
         else if (task.key === 'excerpt') { if (!ne.en?.trim()) ne.en = enT; if (!ne.es?.trim()) ne.es = esT }
         else if (task.key === 'content') { if (!nc.en?.trim()) nc.en = enT; if (!nc.es?.trim()) nc.es = esT }
+        else if (task.key === 'seoTitle') { if (!ns.en?.trim()) ns.en = enT; if (!ns.es?.trim()) ns.es = esT }
+        else if (task.key === 'seoDesc') { if (!nd.en?.trim()) nd.en = enT; if (!nd.es?.trim()) nd.es = esT }
       })
 
       next.title = nt; next.excerpt = ne; next.content = nc
+      next.seoTitle = ns; next.seoDesc = nd
       if (!slugManuallyEdited && nt.en?.trim()) next.slug = slugify(nt.en)
       return next
     } catch {
@@ -228,7 +239,7 @@ export default function BlogsPage() {
     setSaving(true)
     try {
       let final = form
-      if (needsTranslation(form.title, form.excerpt, form.content)) {
+      if (needsTranslation(form.title, form.excerpt, form.content, form.seoTitle, form.seoDesc)) {
         final = await autoTranslateAll(form)
         setForm(final)
       }
@@ -321,10 +332,10 @@ export default function BlogsPage() {
             </div>
 
             {/* SEO */}
-            <div><label className="block text-sm text-gray-600 mb-1">SEO 标题</label>
-              <input value={form.seoTitle} onChange={e => updateField('seoTitle', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-sm text-gray-600 mb-1">SEO 描述</label>
-              <input value={form.seoDesc} onChange={e => updateField('seoDesc', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+            <div><label className="block text-sm text-gray-600 mb-1">SEO 标题 ({LANGS.find(l => l.key === lang)!.label}) <span className="text-gray-400">({(form.seoTitle[lang]||'').length}/{SEO_MAX.title})</span></label>
+              <input value={form.seoTitle[lang] || ''} onChange={e => { const t = { ...form.seoTitle }; t[lang] = e.target.value.slice(0, SEO_MAX.title); updateField('seoTitle', t) }} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder={lang === 'zh' ? '中文SEO标题（将自动翻译）' : '翻译后自动填入'} /></div>
+            <div><label className="block text-sm text-gray-600 mb-1">SEO 描述 ({LANGS.find(l => l.key === lang)!.label}) <span className="text-gray-400">({(form.seoDesc[lang]||'').length}/{SEO_MAX.desc})</span></label>
+              <textarea value={form.seoDesc[lang] || ''} onChange={e => { const d = { ...form.seoDesc }; d[lang] = e.target.value.slice(0, SEO_MAX.desc); updateField('seoDesc', d) }} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder={lang === 'zh' ? '中文SEO描述（将自动翻译）' : '翻译后自动填入'} /></div>
           </div>
 
           <div className="flex gap-2 pt-2 border-t">
