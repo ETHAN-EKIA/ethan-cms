@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 // ── Types ──
 interface Category { id: string; name: Record<string, string>; slug: string }
@@ -9,6 +9,7 @@ interface ProductFormProps {
   categories: Category[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   submitLabel: string
+  importedData?: Record<string, unknown> | null
 }
 
 type LangKey = 'zh' | 'en' | 'es'
@@ -67,7 +68,7 @@ function GalleryUploader({ onAdd }: { onAdd: (url: string) => void }) {
 // ═══════════════════════════════════════════════════════════
 //  MAIN FORM
 // ═══════════════════════════════════════════════════════════
-export default function ProductForm({ initialData, categories, onSubmit, submitLabel }: ProductFormProps) {
+export default function ProductForm({ initialData, categories, onSubmit, submitLabel, importedData }: ProductFormProps) {
   const [lang, setLang] = useState<LangKey>('zh')
   const [loading, setLoading] = useState(false)
   const [translating, setTranslating] = useState(false)
@@ -95,6 +96,21 @@ export default function ProductForm({ initialData, categories, onSubmit, submitL
     seoKeywords: (initialData?.seoKeywords as Record<string, string>) || { zh: '', en: '', es: '' },
     logistics: (initialData?.logistics as Record<string, unknown>) || { moq: { zh: '', en: '', es: '' }, leadTime: { zh: '', en: '', es: '' }, warranty: { zh: '', en: '', es: '' }, datasheet: '' },
   })
+
+  // ── 导入数据自动填入 ──
+  useEffect(() => {
+    if (!importedData) return
+    setForm(prev => {
+      const merged = { ...prev }
+      for (const [key, val] of Object.entries(importedData)) {
+        if (val !== undefined && val !== null && val !== '') {
+          ;(merged as Record<string, unknown>)[key] = val
+        }
+      }
+      return merged
+    })
+    setSlugManuallyEdited(false)
+  }, [importedData])
 
   const catName = categories.find(c => c.id === form.categoryId)?.name?.en || categories.find(c => c.id === form.categoryId)?.name?.zh || ''
 
