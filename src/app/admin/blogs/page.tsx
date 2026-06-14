@@ -203,13 +203,14 @@ export default function BlogsPage() {
       const ns = { ...sd }; const nd = { ...dd }
 
       tasks.forEach((task, idx) => {
-        const enT = data.translations[idx]?.[0] || task.text
-        const esT = data.translations[idx]?.[1] || task.text
-        if (task.key === 'title') { if (!nt.en?.trim()) nt.en = enT; if (!nt.es?.trim()) nt.es = esT }
-        else if (task.key === 'excerpt') { if (!ne.en?.trim()) ne.en = enT; if (!ne.es?.trim()) ne.es = esT }
-        else if (task.key === 'content') { if (!nc.en?.trim()) nc.en = enT; if (!nc.es?.trim()) nc.es = esT }
-        else if (task.key === 'seoTitle') { if (!ns.en?.trim()) ns.en = enT; if (!ns.es?.trim()) ns.es = esT }
-        else if (task.key === 'seoDesc') { if (!nd.en?.trim()) nd.en = enT; if (!nd.es?.trim()) nd.es = esT }
+        const enResult = data.translations[idx]?.[0]
+        const esResult = data.translations[idx]?.[1]
+        // 只填入有效翻译结果（非空且不同于原文），否则保留已有的英文/西语
+        if (task.key === 'title') { if (enResult?.trim() && !nt.en?.trim()) nt.en = enResult; if (esResult?.trim() && !nt.es?.trim()) nt.es = esResult }
+        else if (task.key === 'excerpt') { if (enResult?.trim() && !ne.en?.trim()) ne.en = enResult; if (esResult?.trim() && !ne.es?.trim()) ne.es = esResult }
+        else if (task.key === 'content') { if (enResult?.trim() && !nc.en?.trim()) nc.en = enResult; if (esResult?.trim() && !nc.es?.trim()) nc.es = esResult }
+        else if (task.key === 'seoTitle') { if (enResult?.trim() && !ns.en?.trim()) ns.en = enResult; if (esResult?.trim() && !ns.es?.trim()) ns.es = esResult }
+        else if (task.key === 'seoDesc') { if (enResult?.trim() && !nd.en?.trim()) nd.en = enResult; if (esResult?.trim() && !nd.es?.trim()) nd.es = esResult }
       })
 
       next.title = nt; next.excerpt = ne; next.content = nc

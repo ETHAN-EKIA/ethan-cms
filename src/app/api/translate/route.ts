@@ -100,10 +100,10 @@ async function translateText(
       return data.responseData.translatedText;
     }
 
-    // 失败时返回原文
-    return text;
+    // 非200状态码意味着翻译真正失败，抛出错误触发降级
+    throw new Error(`MyMemory responseStatus=${data.responseStatus}`);
   } catch {
-    // 网络错误时返回原文
-    return text;
+    // 网络错误或API错误时重新抛出，让调用方知道翻译失败
+    throw new Error(`Translation failed for text: ${text.substring(0, 50)}`);
   }
 }
