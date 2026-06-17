@@ -11,7 +11,7 @@ const ALLOWED_TYPES = new Set([
 ]);
 
 // 文件夹白名单
-const ALLOWED_FOLDERS = new Set(['general', 'products', 'blogs', 'categories', 'solutions', 'testimonials']);
+const ALLOWED_FOLDERS = new Set(['general', 'products', 'blogs', 'categories', 'solutions', 'testimonials', 'downloads']);
 
 // 最大文件大小：10MB
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -59,13 +59,16 @@ export async function POST(request: NextRequest) {
     if (!file) return NextResponse.json({ error: '未提供文件' }, { status: 400 });
     if (!ALLOWED_TYPES.has(file.type))
       return NextResponse.json({ error: `不支持的文件类型: ${file.type}` }, { status: 400 });
-    if (file.size > MAX_SIZE)
-      return NextResponse.json({ error: '文件大小不能超过 10MB' }, { status: 400 });
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const safeFolder = folder.replace(/[^a-zA-Z0-9-]/g, '') || 'general';
     if (!ALLOWED_FOLDERS.has(safeFolder))
       return NextResponse.json({ error: `不允许的文件夹: ${safeFolder}` }, { status: 400 });
+
+    // downloads 文件夹允许最大 50MB，其他文件夹 10MB
+    const maxSize = safeFolder === 'downloads' ? 50 * 1024 * 1024 : MAX_SIZE;
+    if (file.size > maxSize)
+      return NextResponse.json({ error: `文件大小不能超过 ${safeFolder === 'downloads' ? '50' : '10'}MB` }, { status: 400 });
 
     const blobPath = `uploads/${safeFolder}/${Date.now()}-${safeName}`;
     const fileBuffer = Buffer.from(await file.arrayBuffer());

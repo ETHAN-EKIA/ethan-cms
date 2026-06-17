@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client'
 
 interface Download { id: string; name: Record<string, string>; type: string; fileUrl: string; fileSize: string; version: string; sortOrder: number; productId?: string; product?: { id: string; name: Record<string, string> } }
@@ -14,6 +14,20 @@ export default function DownloadsPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState({ type: 'PDF', fileUrl: '', fileSize: '', version: '', sortOrder: 0, productId: '', name: { zh: '', en: '', es: '' } as Record<string, string> })
   const [lang, setLang] = useState('en')
+
+  // ── 文件上传 ──
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const uploadFile = async (f: File) => {
+    setUploading(true)
+    try {
+      const fd = new FormData(); fd.append('file', f); fd.append('folder', 'downloads')
+      const r = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
+      const d = await r.json(); if (!r.ok) throw new Error(d.error)
+      const sizeMB = (f.size / (1024 * 1024)).toFixed(1)
+      setForm({ ...form, fileUrl: d.url, fileSize: `${sizeMB} MB` })
+    } catch (e) { alert((e as Error).message) } finally { setUploading(false) }
+  }
 
   const load = () => { apiGet<Download[]>('/downloads').then(setItems).catch(console.error) }
   useEffect(() => {
@@ -40,7 +54,22 @@ export default function DownloadsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div><label className="block text-sm text-gray-600 mb-1">名称 ({lang})</label><input value={form.name[lang] || ''} onChange={e => setForm({ ...form, name: { ...form.name, [lang]: e.target.value } })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
             <div><label className="block text-sm text-gray-600 mb-1">类型</label><select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm"><option>PDF</option><option>ZIP</option><option>DOC</option><option>OTHER</option></select></div>
-            <div><label className="block text-sm text-gray-600 mb-1">文件 URL</label><input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+            <div className="col-span-2"><label className="block text-sm text-gray-600 mb-1">文件 URL</label>
+              <div className="flex gap-3 items-start">
+                <div className="w-24 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 flex-shrink-0">
+                  {form.fileUrl ? <span className="text-cyan-600 text-2xl">📄</span> : <span className="text-gray-400 text-2xl">📁</span>}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="文件URL（上传后自动填入）" />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="px-3 py-1.5 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700 disabled:opacity-50">{uploading ? '上传中...' : '上传文件'}</button>
+                    {form.fileUrl && <button type="button" onClick={() => setForm({ ...form, fileUrl: '' })} className="px-3 py-1.5 bg-gray-200 rounded-lg text-sm">清除</button>}
+                    {form.fileUrl && <a href={form.fileUrl.startsWith('http') ? form.fileUrl : `https://ethan-cms.vercel.app${form.fileUrl.startsWith('/') ? '' : '/'}${form.fileUrl}`} target="_blank" className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm">预览</a>}
+                  </div>
+                  <input ref={fileRef} type="file" accept=".pdf,.zip,.doc,.docx" className="hidden" onChange={e => { if (e.target.files?.[0]) uploadFile(e.target.files[0]); e.target.value = '' }} />
+                </div>
+              </div>
+            </div>
             <div><label className="block text-sm text-gray-600 mb-1">文件大小</label><input value={form.fileSize} onChange={e => setForm({ ...form, fileSize: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
             <div><label className="block text-sm text-gray-600 mb-1">版本</label><input value={form.version} onChange={e => setForm({ ...form, version: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
             <div><label className="block text-sm text-gray-600 mb-1">关联产品</label>

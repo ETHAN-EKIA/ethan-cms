@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client'
 
 interface Testimonial { id: string; author: Record<string, string>; role: Record<string, string>; text: Record<string, string>; stars: number; image: string; company: string; country: string; sortOrder: number }
@@ -12,6 +12,19 @@ export default function TestimonialsPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState({ stars: 5, image: '', company: '', country: '', sortOrder: 0, author: { zh: '', en: '', es: '' } as Record<string, string>, role: { zh: '', en: '', es: '' } as Record<string, string>, text: { zh: '', en: '', es: '' } as Record<string, string> })
   const [lang, setLang] = useState('en')
+
+  // ── 图片上传 ──
+  const imgRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const uploadImage = async (f: File) => {
+    setUploading(true)
+    try {
+      const fd = new FormData(); fd.append('file', f); fd.append('folder', 'testimonials')
+      const r = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
+      const d = await r.json(); if (!r.ok) throw new Error(d.error)
+      setForm({ ...form, image: d.url })
+    } catch (e) { alert((e as Error).message) } finally { setUploading(false) }
+  }
 
   const load = () => { apiGet<Testimonial[]>('/testimonials').then(setItems).catch(console.error) }
   useEffect(() => { load() }, [])
@@ -37,7 +50,21 @@ export default function TestimonialsPage() {
             <div><label className="block text-sm text-gray-600 mb-1">角色 ({lang})</label><input value={form.role[lang] || ''} onChange={e => setForm({ ...form, role: { ...form.role, [lang]: e.target.value } })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
             <div className="col-span-2"><label className="block text-sm text-gray-600 mb-1">评价 ({lang})</label><textarea value={form.text[lang] || ''} onChange={e => setForm({ ...form, text: { ...form.text, [lang]: e.target.value } })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
             <div><label className="block text-sm text-gray-600 mb-1">星级</label><input type="number" min="1" max="5" value={form.stars} onChange={e => setForm({ ...form, stars: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-sm text-gray-600 mb-1">图片</label><input value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+            <div><label className="block text-sm text-gray-600 mb-1">图片</label>
+              <div className="flex gap-3 items-start">
+                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                  {form.image ? <img src={form.image.startsWith('/') || form.image.startsWith('http') ? form.image : `/${form.image}`} className="w-full h-full object-cover" /> : <span className="text-gray-400 text-2xl">📷</span>}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <input value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="图片URL" />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => imgRef.current?.click()} disabled={uploading} className="px-3 py-1.5 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700 disabled:opacity-50">{uploading ? '上传中...' : '上传图片'}</button>
+                    {form.image && <button type="button" onClick={() => setForm({ ...form, image: '' })} className="px-3 py-1.5 bg-gray-200 rounded-lg text-sm">清除</button>}
+                  </div>
+                  <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) uploadImage(e.target.files[0]); e.target.value = '' }} />
+                </div>
+              </div>
+            </div>
             <div><label className="block text-sm text-gray-600 mb-1">国家</label><input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
             <div><label className="block text-sm text-gray-600 mb-1">公司</label><input value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
           </div>
