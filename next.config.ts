@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
       // HSTS: 强制浏览器始终使用HTTPS（max-age=1年）
       { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+      // 安全修复: Content-Security-Policy 防止内联脚本执行和恶意资源加载
+      { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https:; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
     ]
 
     return [

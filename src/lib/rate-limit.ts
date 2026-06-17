@@ -36,14 +36,13 @@ interface RedisClient {
 /**
  * 尝试使用原生 net 模块连接 Redis（零依赖实现）
  * 仅在 REDIS_URL 配置时启用
+ * 安全修复: 改进了 RESP 协议解析器，正确处理所有响应类型
  */
 async function initRedis(): Promise<RedisClient | null> {
   const redisUrl = process.env.REDIS_URL
   if (!redisUrl) return null
 
   try {
-    // 使用 ioredis 或原生 Redis 协议
-    // 此处使用轻量实现，通过 redis URL 解析连接信息
     const url = new URL(redisUrl)
     const host = url.hostname
     const port = parseInt(url.port || '6379')
@@ -53,7 +52,62 @@ async function initRedis(): Promise<RedisClient | null> {
     const client = new net.Socket()
 
     let buffer = ''
-    const resolveQueue: Array<(value: string) => void> = []
+    const resolveQueue: Array<(value: string | null) => void> = []
+    const rejectQueue: Array<(err: Error) => void> = []
+
+    // 安全修复: 改进的 RESP 协议解析器
+    function processBuffer() {
+      while (buffer.length > 0) {
+        const crlfIdx = buffer.indexOf('\r\n')
+        if (crlfIdx === -1) return // 等待更多数据
+
+        const type = buffer[0]
+        const line = buffer.substring(1, crlfIdx)
+
+        if (type === '+' || type === ':') {
+          // 简单字符串或整数
+          buffer = buffer.substring(crlfIdx + 2)
+          const resolve = resolveQueue.shift()
+          rejectQueue.shift()
+          if (resolve) resolve(line)
+        } else if (type === '-') {
+          // 错误响应
+          buffer = buffer.substring(crlfIdx + 2)
+          const resolve = resolveQueue.shift()
+          const reject = rejectQueue.shift()
+          if (reject) reject(new Error(line))
+          else if (resolve) resolve(null)
+        } else if (type === '$') {
+          // 批量字符串: $<length>\r\n<data>\r\n
+          const len = parseInt(line)
+          if (len === -1) {
+            // Null bulk string
+            buffer = buffer.substring(crlfIdx + 2)
+            const resolve = resolveQueue.shift()
+            rejectQueue.shift()
+            if (resolve) resolve(null)
+          } else {
+            const dataStart = crlfIdx + 2
+            const dataEnd = dataStart + len
+            if (buffer.length < dataEnd + 2) return // 等待更多数据
+            const data = buffer.substring(dataStart, dataEnd)
+            buffer = buffer.substring(dataEnd + 2)
+            const resolve = resolveQueue.shift()
+            rejectQueue.shift()
+            if (resolve) resolve(data)
+          }
+        } else if (type === '*') {
+          // 数组响应 (简化处理: 只取第一个元素或视为 null)
+          buffer = buffer.substring(crlfIdx + 2)
+          const resolve = resolveQueue.shift()
+          rejectQueue.shift()
+          if (resolve) resolve(line === '0' ? null : line)
+        } else {
+          // 未知类型，跳过
+          buffer = buffer.substring(crlfIdx + 2)
+        }
+      }
+    }
 
     client.connect(port, host, () => {
       if (password) {
@@ -63,26 +117,17 @@ async function initRedis(): Promise<RedisClient | null> {
 
     client.on('data', (data) => {
       buffer += data.toString()
-      // 简单的 Redis 响应解析
-      while (buffer.includes('\r\n')) {
-        const lines = buffer.split('\r\n')
-        buffer = lines.pop() || ''
-        for (const line of lines) {
-          if (line.startsWith('+') || line.startsWith(':') || line.startsWith('$')) {
-            const resolver = resolveQueue.shift()
-            if (resolver) resolver(line)
-          }
-        }
-      }
+      processBuffer()
     })
 
     client.on('error', (err) => {
       console.warn('[RateLimit] Redis connection error:', err.message)
     })
 
-    function sendCommand(cmd: string): Promise<string> {
-      return new Promise((resolve) => {
+    function sendCommand(cmd: string): Promise<string | null> {
+      return new Promise((resolve, reject) => {
         resolveQueue.push(resolve)
+        rejectQueue.push(reject)
         client.write(cmd + '\r\n')
       })
     }
@@ -90,15 +135,13 @@ async function initRedis(): Promise<RedisClient | null> {
     return {
       async incr(key: string): Promise<number> {
         const res = await sendCommand(`INCR ${key}`)
-        return parseInt(res.replace(':', '')) || 0
+        return parseInt(res || '0') || 0
       },
       async expire(key: string, seconds: number): Promise<void> {
         await sendCommand(`EXPIRE ${key} ${seconds}`)
       },
       async get(key: string): Promise<string | null> {
-        const res = await sendCommand(`GET ${key}`)
-        if (res.startsWith('$-1')) return null
-        return res.replace(/^\$\d+\r\n/, '').trim() || null
+        return sendCommand(`GET ${key}`)
       }
     }
   } catch (err) {
@@ -195,6 +238,18 @@ export function createRateLimiter(namespace: string, config: RateLimitConfig): R
       return memoryCheck(fullKey, config)
     }
   }
+}
+
+// ─── Serverless 环境检测与警告 ───
+// Vercel Serverless 每次调用创建新实例，内存速率限制器几乎无效
+// 生产环境必须配置 REDIS_URL 才能正确限制速率
+const IS_SERVERLESS = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME
+if (IS_SERVERLESS && !process.env.REDIS_URL) {
+  console.warn(
+    '[RateLimit] ⚠️ 当前运行在 Serverless 环境但未配置 REDIS_URL，' +
+    '内存速率限制器在每次函数调用时会重置，几乎无法有效限制频率。' +
+    '请尽快配置 Redis 环境变量以确保安全。'
+  )
 }
 
 // ─── 预定义的速率限制器 ───

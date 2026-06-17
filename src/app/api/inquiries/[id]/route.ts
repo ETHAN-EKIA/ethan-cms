@@ -16,7 +16,19 @@ export const PUT = withAuth(async (req: NextRequest, { params }) => {
   const { id } = await params
   try {
     const data = await req.json()
-    const inquiry = await prisma.inquiry.update({ where: { id }, data })
+
+    // 安全修复: 字段白名单，只允许更新以下字段
+    const allowedFields = ['status', 'assigneeId', 'note', 'reply', 'priority']
+    const sanitized: Record<string, unknown> = {}
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) sanitized[key] = data[key]
+    }
+
+    if (Object.keys(sanitized).length === 0) {
+      return NextResponse.json({ error: '未提供有效的更新字段' }, { status: 400 })
+    }
+
+    const inquiry = await prisma.inquiry.update({ where: { id }, data: sanitized })
     return NextResponse.json(inquiry)
   } catch (error) {
     console.error('Update inquiry error:', error)

@@ -4,7 +4,8 @@ import { sign, verify } from 'jsonwebtoken'
 // 安全修复: 从环境变量获取JWT密钥，不提供硬编码默认值
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) {
-  console.error('[SECURITY] JWT_SECRET 环境变量未设置！请设置一个安全的随机密钥。')
+  // 安全修复: 缺失时必须抛出错误，防止服务在无密钥状态下运行
+  throw new Error('[SECURITY] JWT_SECRET 环境变量未设置！请设置一个安全的随机密钥。')
 }
 const JWT_EXPIRES = '24h' // 安全修复: 从30天缩短到24小时
 
