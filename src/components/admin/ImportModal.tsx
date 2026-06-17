@@ -25,6 +25,182 @@ const FIELD_MAP: Record<string, string> = {
   'SEO关键词': 'seoKeywords', 'SEO Keywords': 'seoKeywords',
 }
 
+/**
+ * 纵向键值对格式的字段标签 → FIELD_MAP 匹配表
+ * 覆盖 Excel 中 A 列出现的中文标签
+ */
+const VERTICAL_LABEL_MAP: Record<string, string> = {
+  '产品名称(中文)': 'name.zh',
+  '产品名称': 'name.zh',
+  '产品名': 'name.zh',
+  'Product Name': 'name.en',
+  'Slug': 'slug',
+  'SKU': 'sku',
+  '型号': 'sku',
+  '品牌': 'brand',
+  '分类': 'categoryId',
+  '价格(USD)': 'price',
+  '价格': 'price',
+  '库存': 'stock',
+  'MOQ': 'moq',
+  '起订量': 'moq',
+  '标签': 'badge',
+  '状态': 'status',
+  '产品简介(中文)': 'summary.zh',
+  '产品简介': 'summary.zh',
+  'SEO标题': 'seoTitle.zh',
+  'SEO描述': 'seoDesc.zh',
+  'SEO关键词': 'seoKeywords.zh',
+  // 区块标记（用于状态机切换）
+  'SEO(中文—可修改)': '__section_seo',
+  'SEO(中文/西语均填)': '__section_seo',
+  '基本信息': '__section_basic',
+  '产品亮点': '__section_highlights',
+  '规格参数': '__section_details',
+  '图片': '__section_images',
+  '物流信息': '__section_logistics',
+  '其他文件': '__section_files',
+}
+
+/**
+ * 检测是否为纵向键值对格式（A列=标签，B列=值）
+ * 特征：首行是合并单元格标题（如"基本信息"），后续行的A列为中文标签
+ */
+function detectVerticalLayout(rows: Record<string, unknown>[], cols: string[]): boolean {
+  if (rows.length < 2) return false
+  // 纵向格式的特征：列名是自动生成的 __EMPTY 系列，且第一列数据包含中文标签
+  const firstCol = cols[0]
+  if (!firstCol) return false
+  // 检查第一列是否包含中文键值标签
+  let labelCount = 0
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const val = String(rows[i][firstCol] || '').trim()
+    if (/^[一-鿿a-zA-Z]+/.test(val)) labelCount++
+  }
+  // 如果前10行中有至少5行的第一列看起来像标签，则认为是纵向格式
+  return labelCount >= 5
+}
+
+/**
+ * 将纵向键值对格式转换为标准横向格式（单行产品数据）
+ * A列=标签，B列=值，合并单元格可能跨 B:E
+ */
+function convertVerticalRows(rows: Record<string, unknown>[], cols: string[]): Record<string, unknown>[] {
+  const firstCol = cols[0]
+  const secondCol = cols[1] || '__EMPTY'
+
+  const flatData: Record<string, string> = {}
+  let highlightIdx = 0
+  let paramIdx = 0
+  const highlights: string[] = []
+  const params: { name: string; value: string }[] = []
+  let inHighlights = false
+  let inDetails = false
+  let inHeader = false
+  let inImages = false
+  let inLogistics = false
+
+  for (const row of rows) {
+    const label = String(row[firstCol] || '').trim()
+    const value = String(row[secondCol] || '').trim()
+
+    if (!label) continue
+
+    // 检测区块切换
+    if (label === '基本信息' || label === '产品名称(中文)' || label === '产品名称') {
+      inHeader = true; inHighlights = false; inDetails = false; inImages = false; inLogistics = false
+    } else if (label === '产品亮点') {
+      inHighlights = true; inDetails = false; inHeader = false; inImages = false; inLogistics = false
+      continue
+    } else if (label === '规格参数' || label === '规格名') {
+      inDetails = true; inHighlights = false; inHeader = false; inImages = false; inLogistics = false
+      continue
+    } else if (label === '图片' || label === '主图') {
+      inImages = true; inHighlights = false; inDetails = false; inHeader = false; inLogistics = false
+      continue
+    } else if (label === '物流信息') {
+      inLogistics = true; inHighlights = false; inDetails = false; inHeader = false; inImages = false
+      continue
+    } else if (label === 'SEO(中文/西语均填)' || label === 'SEO(中文—可修改)' || label === '其他文件') {
+      inHighlights = false; inDetails = false; inHeader = false; inImages = false; inLogistics = false
+      continue
+    }
+
+    // 根据当前区块处理字段
+    if (inHighlights && value) {
+      // 跳过子标题行
+      if (['序号', '亮点内容'].includes(label)) continue
+      // 亮点区域：数字标签(1, 2, 3...)或带中文的标签
+      if (/^\d+$/.test(label) && value) {
+        highlights.push(value)
+      } else if (label.startsWith('亮点') && value) {
+        highlights.push(value)
+      }
+      continue
+    }
+
+    if (inDetails) {
+      // 跳过子标题行
+      if (['规格名', '规格值', '参数名', '参数值', '序号', '亮点内容'].includes(label)) continue
+      if (value) {
+        params.push({ name: label, value: value })
+      }
+      continue
+    }
+
+    if (inImages) {
+      if (label === '主图' && value) flatData['mainImage'] = value
+      if (label === '图片库' && value) flatData['galleryImages'] = value
+      continue
+    }
+
+    if (inLogistics) {
+      if (label === 'MOQ(中文)' && value) flatData['logMoqZh'] = value
+      if (label === '交货时间(中文)' && value) flatData['logLeadTimeZh'] = value
+      if (label === '质保(中文)' && value) flatData['logWarrantyZh'] = value
+      continue
+    }
+
+    // 标准字段使用 VERTICAL_LABEL_MAP
+    const mapped = VERTICAL_LABEL_MAP[label]
+    if (mapped && !mapped.startsWith('__section')) {
+      flatData[mapped] = value
+    } else if (!mapped && value) {
+      // 未映射但有值的标签保留
+      flatData[label] = value
+    }
+  }
+
+  // 构建最终产品记录
+  const product: Record<string, unknown> = {
+    name: { zh: flatData['name.zh'] || '', en: flatData['name.en'] || '', es: '' },
+    slug: flatData['slug'] || '',
+    sku: flatData['sku'] || '',
+    brand: flatData['brand'] || '',
+    categoryId: flatData['categoryId'] || '',
+    price: parseFloat(flatData['price']) || 0,
+    stock: parseInt(flatData['stock']) || 0,
+    moq: parseInt(flatData['moq']) || 1,
+    badge: flatData['badge'] || '',
+    status: flatData['status'] === '上架' ? 'ACTIVE' : flatData['status'] === '草稿' ? 'DRAFT' : 'ACTIVE',
+    summary: { zh: flatData['summary.zh'] || '', en: '', es: '' },
+    highlights: highlights.map(h => ({ zh: h, en: '', es: '' })),
+    details: params.filter(p => p.name).map(p => [{ zh: p.name, en: '', es: '' }, { zh: p.value, en: '', es: '' }]),
+    images: { main: flatData['mainImage'] || '', gallery: flatData['galleryImages'] ? flatData['galleryImages'].split(',').map(s => s.trim()) : [] },
+    seoTitle: { zh: flatData['seoTitle.zh'] || '', en: '', es: '' },
+    seoDesc: { zh: flatData['seoDesc.zh'] || '', en: '', es: '' },
+    seoKeywords: { zh: flatData['seoKeywords.zh'] || '', en: '', es: '' },
+    logistics: {
+      moq: { zh: flatData['logMoqZh'] || '', en: '', es: '' },
+      leadTime: { zh: flatData['logLeadTimeZh'] || '', en: '', es: '' },
+      warranty: { zh: flatData['logWarrantyZh'] || '', en: '', es: '' },
+      datasheet: '',
+    },
+  }
+
+  return [product]
+}
+
 interface ImportModalProps {
   onFill: (data: Record<string, unknown>) => void
   onBatchImport: (rows: Record<string, unknown>[]) => Promise<void>
@@ -47,10 +223,21 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
       const buf = await file.arrayBuffer()
       const wb = XLSX.read(buf, { type: 'array' })
       const ws = wb.Sheets[wb.SheetNames[0]]
-      const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' })
+      let data = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' })
       if (!data.length) { setStatus('表格为空'); return }
 
-      const cols = Object.keys(data[0])
+      let cols = Object.keys(data[0])
+
+      // ── 自动检测纵向键值对格式并转换 ──
+      if (detectVerticalLayout(data, cols)) {
+        data = convertVerticalRows(data, cols)
+        cols = Object.keys(data[0] || {})
+        setStatus(`✅ 检测到纵向键值对格式，已自动转换为 ${data.length} 条产品记录`)
+      } else if (!data.length) {
+        setStatus('格式转换后无有效数据')
+        return
+      }
+
       setColumns(cols)
       setParsedRows(data)
 
@@ -80,6 +267,32 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
   }, [])
 
   const fillFormFromRow = (row: Record<string, unknown>) => {
+    // ── If row already contains structured product data (e.g. from vertical conversion), return directly ──
+    if (row.name && typeof row.name === 'object' && (row.name as Record<string, string>).zh !== undefined) {
+      // Already structured — ensure defaults for optional fields
+      const structured: Record<string, unknown> = {
+        name: row.name,
+        slug: row.slug || '',
+        sku: row.sku || '',
+        brand: row.brand || '',
+        categoryId: row.categoryId || '',
+        price: Number(row.price) || 0,
+        stock: Number(row.stock) || 0,
+        moq: Number(row.moq) || 1,
+        badge: row.badge || '',
+        status: row.status || 'ACTIVE',
+        summary: (row.summary as Record<string, string>) || { zh: '', en: '', es: '' },
+        highlights: (row.highlights as unknown[])?.length ? row.highlights : [{ zh: '', en: '', es: '' }],
+        details: (row.details as unknown[])?.length ? row.details : [[{ zh: '', en: '', es: '' }, { zh: '', en: '', es: '' }]],
+        images: row.images || { main: '', gallery: [] },
+        seoTitle: (row.seoTitle as Record<string, string>) || { zh: '', en: '', es: '' },
+        seoDesc: (row.seoDesc as Record<string, string>) || { zh: '', en: '', es: '' },
+        seoKeywords: (row.seoKeywords as Record<string, string>) || { zh: '', en: '', es: '' },
+        logistics: row.logistics || { moq: { zh: '', en: '', es: '' }, leadTime: { zh: '', en: '', es: '' }, warranty: { zh: '', en: '', es: '' }, datasheet: '' },
+      }
+      return structured
+    }
+
     const formData: Record<string, unknown> = {
       name: { zh: '', en: '', es: '' },
       summary: { zh: '', en: '', es: '' },
