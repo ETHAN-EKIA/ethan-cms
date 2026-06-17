@@ -40,6 +40,21 @@ export default function ProductsPage() {
     return () => clearTimeout(timer)
   }, [page, search])
 
+  // 从编辑页返回时自动刷新数据（Next.js 路由缓存不会重新触发 useEffect）
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') load()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    // 监听 Next.js App Router 的导航事件（从编辑页 router.push 回来时触发）
+    const onFocus = () => load()
+    window.addEventListener('focus', onFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [page, search])
+
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除此产品？')) return
     try {
