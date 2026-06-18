@@ -3,8 +3,15 @@
 import { useState, useRef, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 
-/* ── 字段映射配置 ── */
+/* ── 字段映射配置 ──
+ * 支持两种列名格式：
+ *   1. 中文/显示名 → 内部字段路径（如 "产品名称" → "name.zh"），
+ *      用于普通横向表格的列标题。
+ *   2. 直接字段名 → 自身（如 "name" → "name"），
+ *      用于从系统导出的 Excel（列名已是内部字段名）。
+ */
 const FIELD_MAP: Record<string, string> = {
+  // ── 中文/显示名称映射 ──
   '产品名称': 'name.zh', '产品名称(中文)': 'name.zh', '产品名': 'name.zh',
   'Product Name': 'name.en', 'product name': 'name.en',
   'Nombre': 'name.es', '产品名称(西)': 'name.es',
@@ -23,7 +30,21 @@ const FIELD_MAP: Record<string, string> = {
   'SEO标题': 'seoTitle', 'SEO Title': 'seoTitle',
   'SEO描述': 'seoDesc', 'SEO Description': 'seoDesc',
   'SEO关键词': 'seoKeywords', 'SEO Keywords': 'seoKeywords',
+
+  // ── 直接字段名映射（导出 Excel 的列名即为内部字段名） ──
+  // 注意：只放未在上方中文映射中出现过的字段，避免重复 key
+  'name': 'name', 'highlights': 'highlights', 'details': 'details',
+  'images': 'images', 'logistics': 'logistics',
+  'seoTitle': 'seoTitle', 'seoDesc': 'seoDesc', 'seoKeywords': 'seoKeywords',
 }
+
+/** 结构化 JSON 字段：这些字段在 Prisma 中存为 JSON，
+ *  对应的 Excel 列值已经是对象/数组格式，不应做 toString 转换。 */
+const STRUCTURED_FIELDS = new Set([
+  'name', 'summary', 'highlights', 'details',
+  'images', 'logistics',
+  'seoTitle', 'seoDesc', 'seoKeywords',
+])
 
 /**
  * 纵向键值对格式的字段标签 → FIELD_MAP 匹配表
@@ -115,7 +136,7 @@ function convertVerticalRows(rows: Record<string, unknown>[], cols: string[]): R
     } else if (label === '规格参数' || label === '规格名') {
       inDetails = true; inHighlights = false; inHeader = false; inImages = false; inLogistics = false
       continue
-    } else if (label === '图片' || label === '主图') {
+    } else if (label === '图片') {
       inImages = true; inHighlights = false; inDetails = false; inHeader = false; inLogistics = false
       continue
     } else if (label === '物流信息') {
@@ -149,8 +170,8 @@ function convertVerticalRows(rows: Record<string, unknown>[], cols: string[]): R
     }
 
     if (inImages) {
-      if (label === '主图' && value) flatData['mainImage'] = value
-      if (label === '图片库' && value) flatData['galleryImages'] = value
+      if (label === '主图' && value && value !== '无') flatData['mainImage'] = value
+      if (label === '图片库' && value && value !== '无') flatData['galleryImages'] = value
       continue
     }
 
@@ -158,6 +179,7 @@ function convertVerticalRows(rows: Record<string, unknown>[], cols: string[]): R
       if (label === 'MOQ(中文)' && value) flatData['logMoqZh'] = value
       if (label === '交货时间(中文)' && value) flatData['logLeadTimeZh'] = value
       if (label === '质保(中文)' && value) flatData['logWarrantyZh'] = value
+      if (label === '规格书文件' && value && value !== '无') flatData['datasheet'] = value
       continue
     }
 
@@ -194,11 +216,30 @@ function convertVerticalRows(rows: Record<string, unknown>[], cols: string[]): R
       moq: { zh: flatData['logMoqZh'] || '', en: '', es: '' },
       leadTime: { zh: flatData['logLeadTimeZh'] || '', en: '', es: '' },
       warranty: { zh: flatData['logWarrantyZh'] || '', en: '', es: '' },
-      datasheet: '',
+      datasheet: flatData['datasheet'] || '',
     },
   }
 
   return [product]
+}
+
+/** 将原始单元格值转为适合 formData 的对象/原始值 */
+function coerceStructuredValue(val: unknown): unknown {
+  // 已经是 JS 对象 → 直接使用（xlsx 可能已解析 JSON）
+  if (val !== null && val !== undefined && typeof val === 'object') {
+    return val
+  }
+  // 字符串 → 尝试 JSON.parse
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val)
+      if (typeof parsed === 'object' && parsed !== null) return parsed
+      return parsed
+    } catch {
+      return val // 普通字符串
+    }
+  }
+  return val
 }
 
 interface ImportModalProps {
@@ -232,10 +273,25 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
       if (detectVerticalLayout(data, cols)) {
         data = convertVerticalRows(data, cols)
         cols = Object.keys(data[0] || {})
+        if (!data.length) {
+          setStatus('格式转换后无有效数据')
+          return
+        }
         setStatus(`✅ 检测到纵向键值对格式，已自动转换为 ${data.length} 条产品记录`)
-      } else if (!data.length) {
-        setStatus('格式转换后无有效数据')
-        return
+      } else {
+        // ── 横向格式：为结构化字段（JSON 对象）自动解析值 ──
+        for (const row of data) {
+          for (const col of cols) {
+            const raw = row[col]
+            if (typeof raw === 'string' && raw.startsWith('{') && raw.endsWith('}')) {
+              try { row[col] = JSON.parse(raw) } catch { /* 保持原字符串 */ }
+            }
+            if (typeof raw === 'string' && raw.startsWith('[') && raw.endsWith(']')) {
+              try { row[col] = JSON.parse(raw) } catch { /* 保持原字符串 */ }
+            }
+          }
+        }
+        setStatus(`解析完成：${data.length} 条记录，${cols.length} 列`)
       }
 
       setColumns(cols)
@@ -260,7 +316,6 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
 
       setMapping(autoMap)
       setPreviewRow(0)
-      setStatus(`解析完成：${data.length} 条记录，${cols.length} 列`)
     } catch (e) {
       setStatus('解析失败：' + (e as Error).message)
     }
@@ -269,7 +324,6 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
   const fillFormFromRow = (row: Record<string, unknown>) => {
     // ── If row already contains structured product data (e.g. from vertical conversion), return directly ──
     if (row.name && typeof row.name === 'object' && (row.name as Record<string, string>).zh !== undefined) {
-      // Already structured — ensure defaults for optional fields
       const structured: Record<string, unknown> = {
         name: row.name,
         slug: row.slug || '',
@@ -293,6 +347,7 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
       return structured
     }
 
+    // ── 横向格式：按 mapping 逐列转换 ──
     const formData: Record<string, unknown> = {
       name: { zh: '', en: '', es: '' },
       summary: { zh: '', en: '', es: '' },
@@ -304,30 +359,38 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
 
     for (const [col, field] of Object.entries(mapping)) {
       const raw = row[col]
-      const val: string = typeof raw === 'string' ? raw : (raw !== undefined && raw !== null ? String(raw) : '')
+      if (raw === undefined || raw === null || raw === '') continue
 
+      // ── field 是带路径的（如 name.zh, highlights.0.zh） ──
       if (field.startsWith('highlights.')) {
         const [, idx, lang] = field.split('.')
         const i = parseInt(idx)
         if (!hlMap[i]) hlMap[i] = { zh: '', en: '', es: '' }
-        hlMap[i][lang || 'zh'] = val
+        hlMap[i][lang || 'zh'] = String(raw)
       } else if (field.startsWith('details.')) {
         const [, idx, pos, lang] = field.split('.')
         const i = parseInt(idx)
         if (!dtMap[i]) dtMap[i] = [{ zh:'',en:'',es:'' }, { zh:'',en:'',es:'' }]
-        dtMap[i][parseInt(pos)][lang || 'zh'] = val
+        dtMap[i][parseInt(pos)][lang || 'zh'] = String(raw)
       } else if (field.includes('.')) {
         // nested: name.zh, summary.en
         const [parent, key] = field.split('.')
         const existing = (formData[parent] as Record<string,string>) || {}
-        existing[key] = val
+        existing[key] = String(raw)
         formData[parent] = existing
+      } else if (STRUCTURED_FIELDS.has(field)) {
+        // ── 结构化字段（name, summary, highlights, details, images, logistics, seo*） ──
+        // 值可能已经是对象/数组（xlsx 直接解析），也可能是 JSON 字符串
+        formData[field] = coerceStructuredValue(raw)
       } else {
-        // flat: slug, sku, price...
+        // ── 简单标量字段（slug, sku, brand, badge, status, price, stock, moq） ──
         if (field === 'price' || field === 'stock' || field === 'moq') {
-          formData[field] = parseFloat(val) || 0
+          formData[field] = parseFloat(String(raw)) || 0
+        } else if (field === 'status') {
+          const s = String(raw).toUpperCase()
+          formData[field] = (['ACTIVE','DRAFT','INACTIVE'].includes(s) ? s : 'ACTIVE')
         } else {
-          formData[field] = val
+          formData[field] = String(raw)
         }
       }
     }
@@ -335,7 +398,7 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
     // Build highlights array
     const hlKeys = Object.keys(hlMap).sort()
     if (hlKeys.length) formData.highlights = hlKeys.map(k => hlMap[parseInt(k)])
-    else formData.highlights = [{ zh: '', en: '', es: '' }]
+    else if (!(formData.highlights as unknown[])?.length) formData.highlights = [{ zh: '', en: '', es: '' }]
 
     // Build details array
     const dtKeys = Object.keys(dtMap).sort()
@@ -428,7 +491,16 @@ export default function ImportModal({ onFill, onBatchImport, onClose }: ImportMo
                               .map(([k, v]) => <option key={v} value={v}>{k} → {v}</option>)}
                           </select>
                         </td>
-                        <td className="px-3 py-2 text-gray-600 max-w-[200px] truncate">{String(currentRow[col] ?? '')}</td>
+                        <td className="px-3 py-2 text-gray-600 max-w-[200px] truncate">
+                          {(() => {
+                            const v = currentRow[col]
+                            if (v === null || v === undefined) return ''
+                            if (typeof v === 'object') {
+                              try { return JSON.stringify(v).slice(0, 100) } catch { return String(v) }
+                            }
+                            return String(v)
+                          })()}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
